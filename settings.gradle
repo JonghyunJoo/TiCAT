@@ -1,0 +1,12 @@
+rootProject.name = 'Spring_Cloud_Board'
+
+include 'apigateway-service'
+include 'config-service'
+include 'service-discovery'
+include 'user-service'
+include 'seat-service'
+include 'wallet-service'
+include 'flight-service'
+include 'payment-service'
+include 'reservation-service'
+include 'queue-service'
