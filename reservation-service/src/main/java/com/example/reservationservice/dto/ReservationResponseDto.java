@@ -1,6 +1,5 @@
 package com.example.reservationservice.dto;
 
-import com.example.reservationservice.entity.Reservation;
 import com.example.reservationservice.entity.ReservationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

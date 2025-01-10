@@ -1,6 +1,5 @@
 package com.example.seatservice.dto;
 
-import com.example.seatservice.entity.Seat;
 import com.example.seatservice.entity.SeatGrade;
 import com.example.seatservice.entity.SeatStatus;
 import lombok.Getter;

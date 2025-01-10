@@ -4,7 +4,6 @@ import com.example.userservice.client.WalletServiceClient;
 import com.example.userservice.dto.UserDto;
 import com.example.userservice.entity.User;
 import com.example.userservice.repository.UserRepository;
-import com.example.userservice.vo.ResponseUser;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Slf4j

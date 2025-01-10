@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,9 +58,7 @@ public class UserController {
         Iterable<User> userList = userService.getUserByAll();
 
         List<ResponseUser> result = new ArrayList<>();
-        userList.forEach(v -> {
-            result.add(new ModelMapper().map(v, ResponseUser.class));
-        });
+        userList.forEach(v -> result.add(new ModelMapper().map(v, ResponseUser.class)));
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
