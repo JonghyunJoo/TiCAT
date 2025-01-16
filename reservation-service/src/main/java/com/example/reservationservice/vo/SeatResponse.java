@@ -1,10 +1,12 @@
 package com.example.reservationservice.vo;
 
+import lombok.Builder;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Data
+@Builder
 public class SeatResponse {
     private Long id;
     private Long flightId;

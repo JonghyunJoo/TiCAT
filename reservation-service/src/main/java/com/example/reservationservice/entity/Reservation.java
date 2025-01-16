@@ -22,7 +22,7 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus reservationStatus;
 
-    private Long amount;
+    private Long price;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

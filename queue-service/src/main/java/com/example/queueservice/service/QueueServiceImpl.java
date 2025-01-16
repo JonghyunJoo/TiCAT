@@ -68,7 +68,8 @@ public class QueueServiceImpl implements QueueService {
             }
 
             long waitingOrder = redisTemplate.opsForZSet().rank(WAIT_KEY, token);
-            long waitTime = (waitingOrder + 1) * 1000;
+            long round = (waitingOrder / 200) + 1;
+            long waitTime = (round - 1) * 10;
 
             // 만료된 토큰이라면 대기열에서 삭제
             if (currentTime > token.getExpirationTime()) {
@@ -81,11 +82,11 @@ public class QueueServiceImpl implements QueueService {
             // WAIT 상태라면 대기 순번과 남은 대기 시간 반환
             QueueStatusResponse response = modelMapper.map(token, QueueStatusResponse.class);
             response.setStatus("waiting");
-            response.setQueueStatus(new QueueStatus(waitingOrder + 1, waitTime / 1000));
+            response.setQueueStatus(new QueueStatus(waitingOrder + 1, waitTime));
             return response;
         }
 
-        return new QueueStatusResponse("not found");
+        return new QueueStatusResponse(flightId, "not found", null);
     }
 
     @Scheduled(fixedDelay = 10000) // 10초마다 실행

@@ -18,7 +18,7 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    compileOnly 'org.redisson:redisson-spring-boot-starter:3.40.2'
+    implementation 'org.redisson:redisson-spring-boot-starter:3.40.2'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'
     annotationProcessor 'org.projectlombok:lombok'

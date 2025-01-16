@@ -42,10 +42,9 @@ public class SeatServiceImpl implements SeatService {
                 throw new CustomException(ErrorCode.NOT_FOUND_SEAT);
             }
 
-            // ModelMapper를 사용하여 Seat -> SeatResponseDto 변환
             List<SeatResponseDto> seatList = new ArrayList<>();
             for (Seat seat : seats) {
-                seatList.add(modelMapper.map(seat, SeatResponseDto.class));  // 변환
+                seatList.add(modelMapper.map(seat, SeatResponseDto.class));
             }
             return seatList;
 
@@ -115,7 +114,6 @@ public class SeatServiceImpl implements SeatService {
         RLock lock = redissonClient.getLock(lockKey);
 
         try {
-            // 이미 락이 걸려 있으면 추가 시간만큼 연장
             if (lock.isLocked()) {
                 lock.lock(1, TimeUnit.DAYS);
                 log.info("Lock extended for seat {}", seatId);
@@ -126,14 +124,12 @@ public class SeatServiceImpl implements SeatService {
     }
 
     public void cancelSeatReservation(Long seatId) {
-        // 1. Redisson Lock 해제
         RLock lock = redissonClient.getLock("seat-lock:" + seatId);
         if (lock.isLocked() && lock.isHeldByCurrentThread()) {
-            lock.unlock();  // 락 해제
+            lock.unlock();
             System.out.println("락 해제 성공: " + seatId);
         }
 
-        // 2. Seat 상태 변경 (Available로 변경)
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_SEAT));
         seat.setSeatStatus(SeatStatus.AVAILABLE);

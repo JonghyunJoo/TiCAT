@@ -34,7 +34,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .userId(userId)
                 .seatId(seatId)
                 .reservationStatus(ReservationStatus.RESERVING)
-                .amount(seatResponse.getPrice())
+                .price(seatResponse.getPrice())
                 .createdAt(LocalDateTime.now())
                 .build();
 

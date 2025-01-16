@@ -8,14 +8,19 @@ import com.example.walletservice.exception.CustomException;
 import com.example.walletservice.exception.ErrorCode;
 import com.example.walletservice.repository.TransactionHistoryRepository;
 import com.example.walletservice.repository.WalletRepository;
-import com.example.walletservice.vo.ResponseWallet;
+import com.example.walletservice.dto.WalletResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,9 +32,10 @@ public class WalletServiceImpl implements WalletService {
     private final TransactionHistoryRepository transactionHistoryRepository;
     private ModelMapper modelMapper;
 
-    public ResponseWallet createWallet(Long userId) {
-        if (walletRepository.existsByUserId(userId)) {
-            throw new CustomException(ErrorCode.WALLET_ALREADY_EXISTS);
+    public WalletResponseDto createWallet(Long userId) {
+        Optional<Wallet> walletOpt = walletRepository.findByUserId(userId);
+        if (walletOpt.isPresent()) {
+            return modelMapper.map(walletOpt.get(), WalletResponseDto.class);
         }
 
         Wallet wallet = Wallet.builder()
@@ -39,7 +45,7 @@ public class WalletServiceImpl implements WalletService {
         Wallet savedWallet = walletRepository.save(wallet);
 
         log.info("Wallet created for user {} with initial balance: {}", userId, savedWallet.getBalance());
-        return modelMapper.map(savedWallet, ResponseWallet.class);
+        return modelMapper.map(savedWallet, WalletResponseDto.class);
     }
 
     // 잔액 차감
@@ -95,7 +101,7 @@ public class WalletServiceImpl implements WalletService {
                 .amount(amount)
                 .type(transactionType.name())
                 .userId(userId)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(Clock.systemUTC()))
                 .transactionType(transactionType)
                 .balanceAfterTransaction(wallet.getBalance())
                 .build();
@@ -110,9 +116,9 @@ public class WalletServiceImpl implements WalletService {
         return wallet.getBalance();
     }
 
-    public List<TransactionHistoryResponseDto> getTransactionHistory(Long userId) {
-        List<TransactionHistory> transactionHistories = transactionHistoryRepository.findByUserId(userId);
-
+    public List<TransactionHistoryResponseDto> getTransactionHistory(Long userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<TransactionHistory> transactionHistories = transactionHistoryRepository.findByUserId(userId, pageable);
         return transactionHistories.stream()
                 .map(transaction -> modelMapper.map(transaction, TransactionHistoryResponseDto.class))
                 .collect(Collectors.toList());

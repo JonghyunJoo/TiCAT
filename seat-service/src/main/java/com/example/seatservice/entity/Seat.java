@@ -3,9 +3,11 @@ package com.example.seatservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Entity
-@Getter
 public class Seat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,7 +17,6 @@ public class Seat {
     private Long price;
     @Enumerated(EnumType.STRING)
     private SeatGrade seatGrade;
-    @Setter
     @Enumerated(EnumType.STRING)
     private SeatStatus seatStatus;
     private int number;
