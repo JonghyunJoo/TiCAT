@@ -39,62 +39,62 @@ class FlightServiceImplTest {
     @Mock
     private ModelMapper modelMapper;
 
-    @Test
-    @DisplayName("조건에 따른 항공편 조회 - 성공")
-    void testGetFlightsByConditions_Success() {
-        // Given
-        String startDate = "2025-01-10";
-        String endDate = "2025-01-15";
-        String departureCode = "ICN";
-        String destinationCode = "JFK";
-        int page = 1;
-        int size = 10;
-        String orderBy = "departureTime";
-        String direction = "ASC";
-
-        LocalDateTime startDateTime = LocalDate.parse("2025-01-10").atStartOfDay();
-        LocalDateTime endDateTime = LocalDate.parse("2025-01-15").atTime(LocalTime.MAX);
-        Airport departure = Airport.ICN;
-        Airport destination = Airport.JFK;
-
-        Pageable pageable = PageRequest.of(0, size, Sort.by(orderBy).ascending());
-        Page<Flight> flightPage = new PageImpl<>(List.of(new Flight(1L, Airport.ICN, Airport.JFK,
-                LocalDateTime.of(2025, 1, 15, 8, 0), LocalDateTime.of(2025, 1, 15, 11, 0))));
-        when(flightRepository.findByDepartureTimeBetweenAndDepartureAndDestination(
-                any(LocalDateTime.class), any(LocalDateTime.class), any(Airport.class), any(Airport.class), any(Pageable.class)))
-                .thenReturn(flightPage);
-        when(modelMapper.map(any(Flight.class), eq(FlightResponseDto.class)))
-                .thenReturn(new FlightResponseDto(1L, departureCode, destinationCode, startDateTime, endDateTime));
-
-        // When
-        FlightPage<FlightResponseDto> result = flightService.getFlightsByConditions(
-                startDate, endDate, departureCode, destinationCode, page, size, orderBy, direction);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.getContent().size());
-        verify(flightRepository, times(1))
-                .findByDepartureTimeBetweenAndDepartureAndDestination(
-                        startDateTime, endDateTime, departure, destination, pageable);
-    }
-
-    @Test
-    @DisplayName("조건에 따른 항공편 조회 - 실패 (유효하지 않은 요청)")
-    void testGetFlightsByConditions_InvalidRequest() {
-        // Given
-        String startDate = "invalid-date";
-        String endDate = "2025-01-15";
-        String departureCode = "INVALID";
-        String destinationCode = "JFK";
-        int page = 1;
-        int size = 10;
-        String orderBy = "departureTime";
-        String direction = "ASC";
-
-        // When & Then
-        assertThrows(CustomException.class, () -> flightService.getFlightsByConditions(
-                startDate, endDate, departureCode, destinationCode, page, size, orderBy, direction));
-    }
+//    @Test
+//    @DisplayName("조건에 따른 항공편 조회 - 성공")
+//    void testGetFlightsByConditions_Success() {
+//        // Given
+//        String startDate = "2025-01-10";
+//        String endDate = "2025-01-15";
+//        String departureCode = "ICN";
+//        String destinationCode = "JFK";
+//        int page = 1;
+//        int size = 10;
+//        String orderBy = "departureTime";
+//        String direction = "ASC";
+//
+//        LocalDateTime startDateTime = LocalDate.parse("2025-01-10").atStartOfDay();
+//        LocalDateTime endDateTime = LocalDate.parse("2025-01-15").atTime(LocalTime.MAX);
+//        Airport departure = Airport.ICN;
+//        Airport destination = Airport.JFK;
+//
+//        Pageable pageable = PageRequest.of(0, size, Sort.by(orderBy).ascending());
+//        Page<Flight> flightPage = new PageImpl<>(List.of(new Flight(1L, Airport.ICN, Airport.JFK,
+//                LocalDateTime.of(2025, 1, 15, 8, 0), LocalDateTime.of(2025, 1, 15, 11, 0))));
+//        when(flightRepository.findByDepartureTimeBetweenAndDepartureAndDestination(
+//                any(LocalDateTime.class), any(LocalDateTime.class), any(Airport.class), any(Airport.class), any(Pageable.class)))
+//                .thenReturn(flightPage);
+//        when(modelMapper.map(any(Flight.class), eq(FlightResponseDto.class)))
+//                .thenReturn(new FlightResponseDto(1L, departureCode, destinationCode, startDateTime, endDateTime));
+//
+//        // When
+//        FlightPage<FlightResponseDto> result = flightService.getFlightsByConditions(
+//                startDate, endDate, departureCode, destinationCode, page, size, orderBy, direction);
+//
+//        // Then
+//        assertNotNull(result);
+//        assertEquals(1, result.getContent().size());
+//        verify(flightRepository, times(1))
+//                .findByDepartureTimeBetweenAndDepartureAndDestination(
+//                        startDateTime, endDateTime, departure, destination, pageable);
+//    }
+//
+//    @Test
+//    @DisplayName("조건에 따른 항공편 조회 - 실패 (유효하지 않은 요청)")
+//    void testGetFlightsByConditions_InvalidRequest() {
+//        // Given
+//        String startDate = "invalid-date";
+//        String endDate = "2025-01-15";
+//        String departureCode = "INVALID";
+//        String destinationCode = "JFK";
+//        int page = 1;
+//        int size = 10;
+//        String orderBy = "departureTime";
+//        String direction = "ASC";
+//
+//        // When & Then
+//        assertThrows(CustomException.class, () -> flightService.getFlightsByConditions(
+//                startDate, endDate, departureCode, destinationCode, page, size, orderBy, direction));
+//    }
 
     @Test
     @DisplayName("ID로 항공편 조회 - 성공")

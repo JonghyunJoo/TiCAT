@@ -1,4 +1,4 @@
-package com.example.userservice.vo;
+package com.example.userservice.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -6,11 +6,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 @Schema(description = "A requested user object for user add")
-public class RequestUser {
+public class RequestUserDto {
     @Schema(title = "사용자 Email", description = "사용자 ID로 사용되는 Email 정보로써 로그인 시 사용")
     @NotNull(message = "Email cannot be null")
     @Size(min = 2, message = "Email not be less than two characters")

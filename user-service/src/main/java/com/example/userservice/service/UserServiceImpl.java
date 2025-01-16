@@ -57,21 +57,10 @@ public class UserServiceImpl implements UserService {
 
         UserDto userDto = new ModelMapper().map(user, UserDto.class);
 
-        Long balance = getBalanceWithCircuitBreaker(id);
+        Long balance = walletServiceClient.getBalance(id);
         userDto.setBalance(balance);
 
         return userDto;
-    }
-
-
-    @CircuitBreaker(name = "walletService", fallbackMethod = "getBalanceFallback")
-    private Long getBalanceWithCircuitBreaker(Long id) {
-        log.info("Calling order-service for user: {}", id);
-        return walletServiceClient.getBalance(id);
-    }
-
-    public Long getBalanceFallback(Long userId, Throwable throwable) {
-        return 0L;
     }
 
     @Override

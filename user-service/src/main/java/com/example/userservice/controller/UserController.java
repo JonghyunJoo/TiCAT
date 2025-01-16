@@ -3,8 +3,8 @@ package com.example.userservice.controller;
 import com.example.userservice.dto.UserDto;
 import com.example.userservice.entity.User;
 import com.example.userservice.service.UserService;
-import com.example.userservice.vo.RequestUser;
-import com.example.userservice.vo.ResponseUser;
+import com.example.userservice.dto.RequestUserDto;
+import com.example.userservice.dto.ResponseUserDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -34,14 +34,14 @@ public class UserController {
     }
     )
     @PostMapping("/users")
-    public ResponseEntity<ResponseUser> createUser(@RequestBody RequestUser user) {
+    public ResponseEntity<ResponseUserDto> createUser(@RequestBody RequestUserDto user) {
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
         UserDto userDto = mapper.map(user, UserDto.class);
         userService.createUser(userDto);
 
-        ResponseUser responseUser = mapper.map(userDto, ResponseUser.class);
+        ResponseUserDto responseUser = mapper.map(userDto, ResponseUserDto.class);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseUser);
     }
@@ -54,11 +54,11 @@ public class UserController {
     }
     )
     @GetMapping("/users")
-    public ResponseEntity<List<ResponseUser>> getUsers() {
+    public ResponseEntity<List<ResponseUserDto>> getUsers() {
         Iterable<User> userList = userService.getUserByAll();
 
-        List<ResponseUser> result = new ArrayList<>();
-        userList.forEach(v -> result.add(new ModelMapper().map(v, ResponseUser.class)));
+        List<ResponseUserDto> result = new ArrayList<>();
+        userList.forEach(v -> result.add(new ModelMapper().map(v, ResponseUserDto.class)));
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
@@ -73,13 +73,13 @@ public class UserController {
     }
     )
     @GetMapping("/users/{Id}")
-    public ResponseEntity<ResponseUser> getUser(@PathVariable("Id") Long Id) {
+    public ResponseEntity<ResponseUserDto> getUser(@PathVariable("Id") Long Id) {
         UserDto userDto = userService.getUserById(Id);
         if (userDto == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        ResponseUser returnValue = new ModelMapper().map(userDto, ResponseUser.class);
+        ResponseUserDto returnValue = new ModelMapper().map(userDto, ResponseUserDto.class);
         return ResponseEntity.status(HttpStatus.OK).body(returnValue);
     }
 }

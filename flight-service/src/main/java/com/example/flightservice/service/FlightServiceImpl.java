@@ -1,5 +1,7 @@
 package com.example.flightservice.service;
 
+import com.example.flightservice.dto.FlightPageDto;
+import com.example.flightservice.dto.FlightRequestDto;
 import com.example.flightservice.dto.FlightResponseDto;
 import com.example.flightservice.entity.Airport;
 import com.example.flightservice.entity.Flight;
@@ -7,14 +9,17 @@ import com.example.flightservice.entity.FlightPage;
 import com.example.flightservice.exception.CustomException;
 import com.example.flightservice.exception.ErrorCode;
 import com.example.flightservice.repository.FlightRepository;
+import com.example.flightservice.repository.FlightSpecification;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -35,36 +40,44 @@ public class FlightServiceImpl implements FlightService {
             key = "{#startDate, #departureCode, #destinationCode, #page, #size, #orderBy, #direction}",
             unless = "#result.isEmpty()"
     )
-    public FlightPage<FlightResponseDto> getFlightsByConditions(String startDate,
-                                                                String endDate,
-                                                                String departureCode,
-                                                                String destinationCode,
-                                                                int page,
-                                                                int size,
-                                                                String orderBy,
-                                                                String direction) {
+    public FlightPageDto<FlightResponseDto> getFlightsByConditions(FlightRequestDto flightRequestDto) {
         LocalDateTime startDateTime;
         LocalDateTime endDateTime;
 
-        startDateTime = startTimeParser(startDate);
-        endDateTime = endTimeParser(endDate);
-
         try {
-            Sort sort = Sort.by(orderBy);
-            if (direction.equalsIgnoreCase("DESC")) {
+            Sort sort = Sort.by(flightRequestDto.getOrderBy());
+            if (flightRequestDto.getOrderDirection().equalsIgnoreCase("DESC")) {
                 sort = sort.descending();
             } else {
                 sort = sort.ascending();
             }
 
-            Pageable pageable = PageRequest.of(page - 1, size, sort);
+            Pageable pageable = PageRequest.of(flightRequestDto.getPage(), flightRequestDto.getSize(), sort);
 
-            Airport departure = Airport.valueOf(departureCode);
-            Airport destination = Airport.valueOf(destinationCode);
+            Specification<Flight> spec = (root, query, criteriaBuilder) -> null;
 
-            return new FlightPage<>(flightRepository.findByDepartureTimeBetweenAndDepartureAndDestination(
-                            startDateTime, endDateTime, departure, destination, pageable)
-                    .map(flight -> modelMapper.map(flight, FlightResponseDto.class)));
+            if (flightRequestDto.getDeparture() != null) {
+                Airport departure = Airport.valueOf(flightRequestDto.getDeparture());
+                spec = spec.and(FlightSpecification.equalDeparture(departure));
+            }
+
+            if (flightRequestDto.getDestination() != null) {
+                Airport destination = Airport.valueOf(flightRequestDto.getDestination());
+                spec = spec.and(FlightSpecification.equalDestination(destination));
+            }
+
+            if (flightRequestDto.getStartDate() != null) {
+                startDateTime = startTimeParser(flightRequestDto.getStartDate());
+                if (flightRequestDto.getEndDate() != null) {
+                    endDateTime = endTimeParser(flightRequestDto.getEndDate());
+                } else {
+                    endDateTime = startDateTime.plusMonths(1);
+                }
+                spec = spec.and(FlightSpecification.betweenStartDateAndEndDate(startDateTime, endDateTime));
+            }
+
+            Page<Flight> flightPage = flightRepository.findAll(spec, pageable);
+            return new FlightPageDto<>(flightPage.map(flight -> modelMapper.map(flight, FlightResponseDto.class)));
         } catch (IllegalArgumentException ex) {
             log.error("항공편 검색 조건이 잘못되었습니다.", ex);
             throw new CustomException(ErrorCode.INVALID_REQUEST);

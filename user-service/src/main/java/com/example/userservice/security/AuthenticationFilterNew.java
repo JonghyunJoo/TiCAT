@@ -2,7 +2,7 @@ package com.example.userservice.security;
 
 import com.example.userservice.dto.UserDto;
 import com.example.userservice.service.UserService;
-import com.example.userservice.vo.RequestLogin;
+import com.example.userservice.dto.RequestLoginDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -44,7 +44,7 @@ public class AuthenticationFilterNew  extends UsernamePasswordAuthenticationFilt
             throws AuthenticationException {
         try {
 
-            RequestLogin creds = new ObjectMapper().readValue(req.getInputStream(), RequestLogin.class);
+            RequestLoginDto creds = new ObjectMapper().readValue(req.getInputStream(), RequestLoginDto.class);
 
             return getAuthenticationManager().authenticate(
                     new UsernamePasswordAuthenticationToken(creds.getEmail(), creds.getPassword(), new ArrayList<>()));

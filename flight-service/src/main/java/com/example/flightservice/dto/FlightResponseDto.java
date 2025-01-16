@@ -3,12 +3,13 @@ package com.example.flightservice.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Getter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "항공편 응답 데이터를 표현하는 DTO")

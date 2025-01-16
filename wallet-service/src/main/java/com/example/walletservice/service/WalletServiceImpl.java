@@ -72,7 +72,7 @@ public class WalletServiceImpl implements WalletService {
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
 
-        wallet.setBalance(wallet.getBalance() + amount); // 직접 엔티티 수정
+        wallet.setBalance(wallet.getBalance() + amount);
         walletRepository.save(wallet);
 
         // 거래 내역 저장 (충전)
@@ -123,5 +123,4 @@ public class WalletServiceImpl implements WalletService {
                 .map(transaction -> modelMapper.map(transaction, TransactionHistoryResponseDto.class))
                 .collect(Collectors.toList());
     }
-
 }
