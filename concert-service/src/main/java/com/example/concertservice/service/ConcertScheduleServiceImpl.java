@@ -31,7 +31,7 @@ public class ConcertScheduleServiceImpl implements ConcertScheduleService {
         ConcertSchedule concertSchedule = modelMapper.map(concertScheduleRequestDto, ConcertSchedule.class);
 
         ConcertSchedule savedConcertSchedule = concertScheduleRepository.save(concertSchedule);
-        return modelMapper.map(concertSchedule, ConcertScheduleResponseDto.class);
+        return modelMapper.map(savedConcertSchedule, ConcertScheduleResponseDto.class);
     }
 
     @Override

@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,28 +38,35 @@ public class ReservationServiceImpl implements ReservationService {
     private final ModelMapper modelMapper;
 
     @Override
+    @Transactional
     public ReservationGroupResponseDto createReservation(List<Long> seats, Long userId) {
+        log.info("Creating reservation for user: {}, seats: {}", userId, seats);
+
         ReservationGroup reservationGroup = ReservationGroup.builder()
                 .userId(userId)
                 .status(ReservationStatus.RESERVING)
                 .createdAt(LocalDateTime.now())
                 .build();
-
         reservationGroupRepository.save(reservationGroup);
 
-        List<Reservation> reservations = seats.stream()
-                .map(seatId -> {
-                    SeatResponse seatResponse = seatClient.getSeatById(seatId);
-                    return Reservation.builder()
-                            .userId(userId)
-                            .seatId(seatId)
-                            .reservationStatus(ReservationStatus.RESERVING)
-                            .price(seatResponse.getPrice())
-                            .createdAt(LocalDateTime.now())
-                            .reservationGroup(reservationGroup)
-                            .build();
-                })
-                .collect(Collectors.toList());
+        List<Reservation> reservations = new ArrayList<>();
+        for (Long seatId : seats) {
+            try {
+                SeatResponse seatResponse = seatClient.getSeatById(seatId);
+                Reservation reservation = Reservation.builder()
+                        .userId(userId)
+                        .seatId(seatId)
+                        .reservationStatus(ReservationStatus.RESERVING)
+                        .price(seatResponse.getPrice())
+                        .createdAt(LocalDateTime.now())
+                        .reservationGroup(reservationGroup)
+                        .build();
+                reservations.add(reservation);
+            } catch (Exception e) {
+                log.error("Failed to fetch seat info for seatId: {}", seatId, e);
+                throw new CustomException(ErrorCode.SEAT_NOT_FOUND);
+            }
+        }
 
         reservationRepository.saveAll(reservations);
 
@@ -68,21 +76,23 @@ public class ReservationServiceImpl implements ReservationService {
                 .build();
 
         reservationEventProducer.sendReservationSuccessEvent(successEvent);
+        log.info("Sent ReservationSuccessEvent for user: {}, seats: {}", userId, seats);
 
         List<ReservationResponseDto> reservationList = reservations.stream()
                 .map(reservation -> modelMapper.map(reservation, ReservationResponseDto.class))
                 .toList();
 
-        ReservationGroupResponseDto reservationGroupResponseDto
-                = modelMapper.map(reservationGroup, ReservationGroupResponseDto.class);
+        ReservationGroupResponseDto reservationGroupResponseDto = modelMapper.map(reservationGroup, ReservationGroupResponseDto.class);
         reservationGroupResponseDto.setReservations(reservationList);
 
         return reservationGroupResponseDto;
     }
 
-
     @Override
+    @Transactional
     public void completeReserve(Long reservationGroupId) {
+        log.info("Completing reservation group: {}", reservationGroupId);
+
         ReservationGroup reservationGroup = reservationGroupRepository.findById(reservationGroupId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_GROUP_NOT_FOUND));
 
@@ -90,17 +100,24 @@ public class ReservationServiceImpl implements ReservationService {
         reservationGroupRepository.save(reservationGroup);
 
         List<Reservation> reservations = reservationRepository.findAllByReservationGroupId(reservationGroupId);
-        for (Reservation reservation : reservations) {
-            reservation.confirmReservation();
-        }
+        reservations.forEach(Reservation::confirmReservation);
 
         reservationRepository.saveAll(reservations);
+        log.info("Completed reservation group: {}", reservationGroupId);
     }
 
     @Override
+    @Transactional
     public void cancelReservationGroup(Long userId, Long reservationGroupId) {
+        log.info("Canceling reservation group: {} for user: {}", reservationGroupId, userId);
+
         ReservationGroup reservationGroup = reservationGroupRepository.findById(reservationGroupId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_GROUP_NOT_FOUND));
+
+        if (!reservationGroup.getUserId().equals(userId)) {
+            log.warn("User {} is not authorized to cancel reservation group {}", userId, reservationGroupId);
+            throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         reservationGroup.cancelGroupReservation();
         reservationGroupRepository.save(reservationGroup);
@@ -124,12 +141,21 @@ public class ReservationServiceImpl implements ReservationService {
                 .build();
 
         reservationEventProducer.sendReservationCanceledEvent(event);
+        log.info("Sent ReservationCanceledEvent for user: {}, amount: {}", userId, totalAmount);
     }
 
     @Override
+    @Transactional
     public void cancelReservation(Long userId, Long reservationId) {
+        log.info("Canceling reservation: {} for user: {}", reservationId, userId);
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!reservation.getUserId().equals(userId)) {
+            log.warn("User {} is not authorized to cancel reservation {}", userId, reservationId);
+            throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
 
         reservation.cancelReservation();
         reservationRepository.save(reservation);
@@ -141,7 +167,9 @@ public class ReservationServiceImpl implements ReservationService {
                 .build();
 
         reservationEventProducer.sendReservationCanceledEvent(event);
+        log.info("Sent ReservationCanceledEvent for user: {}, seatId: {}", userId, reservation.getSeatId());
     }
+
 
     @Override
     public ReservationResponseDto getReservationById(Long reservationId) {
@@ -157,15 +185,6 @@ public class ReservationServiceImpl implements ReservationService {
         return modelMapper.map(reservationGroup, ReservationGroupResponseDto.class);
     }
 
-
-    @Override
-    public List<ReservationResponseDto> getReservationsByUserId(Long userId) {
-        List<Reservation> reservations = reservationRepository.findAllByUserId(userId);
-        return reservations.stream()
-                .map(reservation -> modelMapper.map(reservation, ReservationResponseDto.class))
-                .collect(Collectors.toList());
-    }
-
     @Override
     public List<ReservationGroupResponseDto> getReservationGroupsByUserId(Long userId) {
         List<ReservationGroup> reservationGroups = reservationGroupRepository.findAllByUserId(userId);
@@ -173,5 +192,4 @@ public class ReservationServiceImpl implements ReservationService {
                 .map(reservationGroup -> modelMapper.map(reservationGroup, ReservationGroupResponseDto.class))
                 .collect(Collectors.toList());
     }
-
 }

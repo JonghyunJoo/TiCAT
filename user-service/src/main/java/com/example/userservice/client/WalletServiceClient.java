@@ -11,7 +11,7 @@ public interface WalletServiceClient {
     @GetMapping("/balance/{id}")
     Long getBalance(@PathVariable Long id);
 
-    default Long getBalanceFallback(Long userId, Throwable throwable) {
+    default Long getBalanceFallback(Long id, Throwable throwable) {
         return 0L;
     }
 }

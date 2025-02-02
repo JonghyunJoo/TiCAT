@@ -30,8 +30,8 @@ public class ReservationController {
     })
     @PostMapping()
     public ResponseEntity<ReservationGroupResponseDto> createReservation(
-            @Parameter(description = "사용자 ID", required = true) @RequestHeader("X-User-Id") Long userId,
-            @Parameter(description = "예약할 좌석 ID", required = true) @RequestBody List<Long> seatList) {
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody List<Long> seatList) {
         ReservationGroupResponseDto groupResponseDto = reservationService.createReservation(seatList, userId);
         return ResponseEntity.ok(groupResponseDto);
     }
@@ -42,24 +42,37 @@ public class ReservationController {
             @ApiResponse(responseCode = "404", description = "Not Found (예약 정보 없음)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @GetMapping("/user")
+    @GetMapping()
     public ResponseEntity<List<ReservationGroupResponseDto>> getUserReservationGroups(
             @RequestHeader("X-User-Id") Long userId) {
         List<ReservationGroupResponseDto> reservationGroupList = reservationService.getReservationGroupsByUserId(userId);
         return ResponseEntity.ok(reservationGroupList);
     }
 
-    @Operation(summary = "예약 상세 조회", description = "예약 ID를 기반으로 예약 정보를 조회합니다.")
+    @Operation(summary = "예약 그룹 조회", description = "예약 그룹 ID를 기반으로 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "404", description = "Not Found (예약 정보 없음)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @GetMapping("/{reservationGroupId}")
+    @GetMapping("/reservationGroups/{reservationGroupId}")
     public ResponseEntity<ReservationGroupResponseDto> getReservationGroup(
             @PathVariable Long reservationGroupId) {
         ReservationGroupResponseDto groupResponseDto = reservationService.getReservationGroupById(reservationGroupId);
         return ResponseEntity.ok(groupResponseDto);
+    }
+
+    @Operation(summary = "예약 조회", description = "예약 ID를 기반으로 예약 정보를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "Not Found (예약 정보 없음)"),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    @GetMapping("/reservations/{reservationId}")
+    public ResponseEntity<ReservationResponseDto> getReservationById(
+            @PathVariable Long reservationId) {
+        ReservationResponseDto reservationResponse = reservationService.getReservationById(reservationId);
+        return ResponseEntity.ok(reservationResponse);
     }
 
     @Operation(summary = "예약 취소", description = "특정 예약 ID를 사용하여 예약을 취소합니다.")
@@ -67,7 +80,7 @@ public class ReservationController {
             @ApiResponse(responseCode = "204", description = "예약 취소 성공"),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음")
     })
-    @PostMapping("/cancelReservation/{reservationId}")
+    @PostMapping("/reservations/{reservationId}")
     public ResponseEntity<Void> cancelReservation(
             @RequestHeader("X-User-Id") Long userId,
             @Parameter(description = "취소할 예약 ID", required = true) @PathVariable Long reservationId) {
@@ -75,12 +88,12 @@ public class ReservationController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "예약 취소", description = "특정 예약 ID를 사용하여 예약을 취소합니다.")
+    @Operation(summary = "예약 그룹 취소", description = "특정 예약 ID를 사용하여 예약을 취소합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "예약 취소 성공"),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음")
     })
-    @PostMapping("/cancelReservationGroup/{reservationGroupId}")
+    @PostMapping("/reservationGroups/{reservationGroupId}")
     public ResponseEntity<Void> cancelReservationGroup(
             @RequestHeader("X-User-Id") Long userId,
             @Parameter(description = "취소할 예약 ID", required = true) @PathVariable Long reservationGroupId) {

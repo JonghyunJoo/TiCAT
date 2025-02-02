@@ -1,8 +1,6 @@
 package com.example.concertservice.dto;
 
-import com.example.concertservice.entity.SeatPricingConverter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Convert;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

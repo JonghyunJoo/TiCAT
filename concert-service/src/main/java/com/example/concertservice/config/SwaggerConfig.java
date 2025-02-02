@@ -10,7 +10,7 @@ import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 @OpenAPIDefinition(
         info = @Info(title = "Concert Service API specifications for MSA",
@@ -30,6 +30,6 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .components(new Components().addSecuritySchemes("bearerAuth", securityScheme))
                 .addServersItem(new Server().url("/"))
-                .security(Arrays.asList(securityRequirement));
+                .security(Collections.singletonList(securityRequirement));
     }
 }

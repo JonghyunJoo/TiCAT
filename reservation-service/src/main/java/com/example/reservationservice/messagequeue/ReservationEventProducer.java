@@ -16,7 +16,7 @@ public class ReservationEventProducer {
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public ReservationEventProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
+    public ReservationEventProducer(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
     // 결제 취소 이벤트 발송

@@ -1,7 +1,6 @@
 package com.example.concertservice.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.Convert;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Map;
 
 @Data
 @AllArgsConstructor

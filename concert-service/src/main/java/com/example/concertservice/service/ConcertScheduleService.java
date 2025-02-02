@@ -2,7 +2,6 @@ package com.example.concertservice.service;
 
 import com.example.concertservice.dto.ConcertScheduleRequestDto;
 import com.example.concertservice.dto.ConcertScheduleResponseDto;
-import com.example.concertservice.entity.ConcertSchedule;
 
 import java.util.List;
 

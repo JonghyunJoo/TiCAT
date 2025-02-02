@@ -85,4 +85,40 @@ public class ConcertController {
     public ResponseEntity<List<ConcertScheduleResponseDto>> getSchedulesByConcertId(@PathVariable Long concertId) {
         return ResponseEntity.ok(concertScheduleService.getSchedulesByConcertId(concertId));
     }
+
+    @Operation(summary = "콘서트 스케줄 단건 조회", description = "concertScheduleId를 기준으로 특정 콘서트 스케줄을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "스케줄 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 ID의 스케줄 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @GetMapping("/concertSchedule/detail/{concertScheduleId}")
+    public ResponseEntity<ConcertScheduleResponseDto> getScheduleById(@PathVariable Long concertScheduleId) {
+        ConcertScheduleResponseDto schedule = concertScheduleService.getScheduleById(concertScheduleId);
+        return ResponseEntity.ok(schedule);
+    }
+
+    @Operation(summary = "콘서트 삭제", description = "concertId를 기준으로 콘서트를 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "콘서트 삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 ID의 콘서트 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @DeleteMapping("/{concertId}")
+    public ResponseEntity<Void> deleteConcert(@PathVariable Long concertId) {
+        concertService.deleteConcert(concertId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "콘서트 스케줄 삭제", description = "concertScheduleId를 기준으로 콘서트 스케줄을 삭제합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "스케줄 삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 ID의 스케줄 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @DeleteMapping("/concertSchedules/{concertScheduleId}")
+    public ResponseEntity<Void> deleteSchedule(@PathVariable Long concertScheduleId) {
+        concertScheduleService.deleteSchedule(concertScheduleId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -18,20 +18,18 @@ public class ModelMapperConfig {
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
 
-        // Map<String, Long>을 JSON 문자열로 변환
         modelMapper.addConverter(new Converter<Map<String, Long>, String>() {
             @Override
             public String convert(MappingContext<Map<String, Long>, String> context) {
                 try {
                     ObjectMapper objectMapper = new ObjectMapper();
-                    return objectMapper.writeValueAsString(context.getSource());  // Map -> JSON String
+                    return objectMapper.writeValueAsString(context.getSource());
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException("Failed to convert Map to JSON", e);
                 }
             }
         });
 
-        // JSON 문자열을 Map<String, Long>으로 변환
         modelMapper.addConverter(new Converter<String, Map<String, Long>>() {
             @Override
             public Map<String, Long> convert(MappingContext<String, Map<String, Long>> context) {

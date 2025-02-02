@@ -1,6 +1,5 @@
 package com.example.queueservice.dto;
 
-import com.example.queueservice.vo.QueueStatus;
 import lombok.*;
 
 @Getter

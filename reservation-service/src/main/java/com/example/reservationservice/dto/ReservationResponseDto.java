@@ -1,6 +1,6 @@
 package com.example.reservationservice.dto;
 
-import com.example.reservationservice.entity.ReservationStatus;
+
 import lombok.*;
 
 import java.time.LocalDateTime;
