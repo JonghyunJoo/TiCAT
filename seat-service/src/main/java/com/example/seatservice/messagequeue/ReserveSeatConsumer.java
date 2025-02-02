@@ -1,10 +1,9 @@
 package com.example.seatservice.messagequeue;
 
-import com.example.seatservice.event.PaymentCancelledEvent;
-import com.example.seatservice.event.PaymentFailedEvent;
-import com.example.seatservice.event.PaymentSuccessEvent;
+
+import com.example.seatservice.event.ReservationCanceledEvent;
+import com.example.seatservice.event.ReservationSuccessEvent;
 import com.example.seatservice.service.SeatService;
-import com.example.seatservice.vo.SeatReserveRequest;
 import com.example.seatservice.entity.Seat;
 import com.example.seatservice.entity.SeatStatus;
 import com.example.seatservice.repository.SeatRepository;
@@ -12,8 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,27 +22,43 @@ public class ReserveSeatConsumer {
     private final ObjectMapper objectMapper;
     private final SeatService seatService;
 
-    @KafkaListener(topics = {"reserve_seat", "payment_success", "payment_failed", "payment_cancelled"}, groupId = "seat-service")
-    public void consume(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+    @KafkaListener(topics = "reservation_success_topic", groupId = "seat-service")
+    public void onReservationSuccess(String message) {
         try {
-            if ("reserve_seat".equals(topic)) {
-                SeatReserveRequest request = objectMapper.readValue(message, SeatReserveRequest.class);
-                seatService.handleSeatReservation(request.getSeatId());
-            } else if ("payment_success_topic".equals(topic)) {
-                PaymentSuccessEvent event = objectMapper.readValue(message, PaymentSuccessEvent.class);
-                Seat seat = seatRepository.findById(event.getSeatId())
-                        .orElseThrow(() -> new IllegalArgumentException("Seat not found"));
+            // 메시지를 ReservationSuccessEvent 객체로 변환
+            ReservationSuccessEvent event = objectMapper.readValue(message, ReservationSuccessEvent.class);
+
+            // 각 Seat ID에 대해 상태 업데이트
+            for (Long seatId : event.getSeatId()) {
+                Seat seat = seatRepository.findById(seatId)
+                        .orElseThrow(() -> new IllegalArgumentException("Seat not found: " + seatId));
+
                 seat.updateStatus(SeatStatus.RESERVED);
                 seatRepository.save(seat);
-            } else if ("payment_failed_topic".equals(topic)) {
-                PaymentFailedEvent event = objectMapper.readValue(message, PaymentFailedEvent.class);
-                seatService.extendLock(event.getSeatId(), event.getLockExtensionSeconds());
-            } else if ("payment_cancelled_topic".equals(topic)) {
-                PaymentCancelledEvent event = objectMapper.readValue(message, PaymentCancelledEvent.class);
-                seatService.cancelSeatReservation(event.getSeatId());
             }
+
+            log.info("Reservation success for user {}: seats {}", event.getUserId(), event.getSeatId());
         } catch (Exception e) {
-            log.error("Error processing message from topic {}: {}", topic, e.getMessage());
+            log.error("Error processing reservation success message: {}", e.getMessage(), e);
+        }
+    }
+
+
+    @KafkaListener(topics = "reservation_canceled_topic", groupId = "reservation-service")
+    public void onReservationCanceled(String message) {
+        try {
+            ReservationCanceledEvent event = objectMapper.readValue(message, ReservationCanceledEvent.class);
+
+            // 좌석 목록에 대해 반복 처리
+            for (Long seatId : event.getSeatList()) {
+                seatService.cancelSeatLock(seatId);
+                log.info("Seat lock canceled for seat ID: {}", seatId);
+            }
+
+            log.info("Reservation canceled for seats: {}", event.getSeatList());
+        } catch (Exception e) {
+            log.error("Error processing reservation canceled message: {}", e.getMessage(), e);
         }
     }
 }
+

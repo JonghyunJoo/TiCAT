@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana-provisioning:/etc/grafana/provisioning
+      - ./grafana-dashboard:/dashboard
+    depends_on:
+      - prometheus
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    command:
+      - --web.enable-remote-write-receiver
+      - --enable-feature=native-histograms
+      - --config.file=/etc/prometheus/prometheus.yml
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  k6:
+    container_name: k6
+    image: grafana/k6
+    volumes:
+      - ./k6-scripts:/scripts
+    command: run -o experimental-prometheus-rw /scripts/stress.js
+    environment:
+      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
+      - K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - prometheus
+
+  zipkin:
+    container_name: zipkin-service
+    image: openzipkin/zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mysql
+      - MYSQL_DB=zipkin
+      - MYSQL_USER=zipkin
+      - MYSQL_PASS=zipkin
+      - MYSQL_HOST=mysql
+    depends_on:
+      - mysql
+
+  mysql:
+    container_name: zipkin-mysql
+    image: mysql:5.7
+    platform: linux/amd64
+    volumes:
+      - ./initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_DATABASE: zipkin
+      MYSQL_USER: zipkin
+      MYSQL_PASSWORD: zipkin
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3308:3306"
