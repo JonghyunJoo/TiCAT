@@ -1,7 +1,6 @@
 package com.example.paymentservice.messagequeue;
 
 import com.example.paymentservice.event.PaymentCancelledEvent;
-import com.example.paymentservice.event.PaymentFailedEvent;
 import com.example.paymentservice.event.PaymentSuccessEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,20 +32,6 @@ public class PaymentEventProducer {
 
         kafkaTemplate.send("payment_success_topic", jsonInString);
         log.info("Sent PaymentSuccessEvent: {}", event);
-    }
-
-    // 결제 실패 이벤트 발송
-    public void sendPaymentFailedEvent(PaymentFailedEvent event) {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonInString = "";
-        try {
-            jsonInString = mapper.writeValueAsString(event);
-        } catch (JsonProcessingException ex) {
-            log.error("Error serializing PaymentFailedEvent: ", ex);
-        }
-
-        kafkaTemplate.send("payment_failed_topic", jsonInString);
-        log.info("Sent PaymentFailedEvent: {}", event);
     }
 
     // 결제 취소 이벤트 발송

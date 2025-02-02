@@ -4,8 +4,7 @@ import lombok.Data;
 
 @Data
 public class PaymentSuccessEvent {
-    private Long reservationId;
-    private Long seatId;
+    private Long reservationGroupId;
     private Long userId;
     private int amount;
 }

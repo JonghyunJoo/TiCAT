@@ -1,7 +1,7 @@
 package com.example.queueservice.controller;
 
-import com.example.queueservice.dto.QueueRequest;
-import com.example.queueservice.dto.QueueStatusResponse;
+import com.example.queueservice.dto.QueueRequestDto;
+import com.example.queueservice.dto.QueueStatusResponseDto;
 import com.example.queueservice.service.QueueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,9 +25,9 @@ public class QueueController {
             @ApiResponse(responseCode = "400", description = "Bad Request (요청 데이터 오류)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @PostMapping
-    public ResponseEntity<QueueStatusResponse> createQueue(@RequestBody QueueRequest request) {
-        QueueStatusResponse response = queueService.addToQueue(request.getUserId(), request.getFlightId());
+    @PostMapping("/")
+    public ResponseEntity<QueueStatusResponseDto> createQueue(@RequestBody QueueRequestDto queueRequestDto) {
+        QueueStatusResponseDto response = queueService.addToQueue(queueRequestDto.getUserId(), queueRequestDto.getConcertScheduleId());
         return ResponseEntity.ok(response);
     }
 
@@ -37,10 +37,24 @@ public class QueueController {
             @ApiResponse(responseCode = "404", description = "Not Found (대기열이 존재하지 않음)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @GetMapping
-    public ResponseEntity<QueueStatusResponse> getQueueStatus(@RequestBody QueueRequest request) {
-        QueueStatusResponse response = queueService.getQueueStatus(request.getUserId(), request.getFlightId());
+    @GetMapping("/")
+    public ResponseEntity<QueueStatusResponseDto> getQueueStatus(
+            @RequestParam Long userId,
+            @RequestParam Long concertScheduleId) {
+        QueueStatusResponseDto response = queueService.getQueueStatus(userId, concertScheduleId);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "대기열 삭제", description = "대기열 ID를 기반으로 상태를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "Not Found (대기열이 존재하지 않음)"),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    @DeleteMapping("/{concertScheduleId}")
+    public ResponseEntity<String> deleteQueue(@RequestHeader("X-User-Id") Long userId) {
+        queueService.deleteTokens(userId);
+        return ResponseEntity.ok("대기열 삭제 완료");
     }
 }
 

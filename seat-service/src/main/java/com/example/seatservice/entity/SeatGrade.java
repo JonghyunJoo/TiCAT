@@ -4,9 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum SeatGrade {
-    ECONOMY("Economy Class"),
-    BUSINESS("Business Class"),
-    FIRST("First Class");
+    VIP("VIP석"),
+    R("R석"),
+    S("S석"),
+    A("A석");
 
     private final String description;
 

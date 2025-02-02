@@ -1,130 +1,165 @@
 package com.example.queueservice.service;
 
-import com.example.queueservice.dto.QueueStatusResponse;
+import com.example.queueservice.dto.QueueStatusResponseDto;
 import com.example.queueservice.entity.QueueToken;
-import com.example.queueservice.vo.QueueStatus;
+import com.example.queueservice.exception.CustomException;
+import com.example.queueservice.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class QueueServiceImpl implements QueueService {
 
     private final RedisTemplate<String, QueueToken> redisTemplate;
-    private final ModelMapper modelMapper;
 
-    private static final long EXPIRATION_TIME = 10000; // 10초
+    private static final long EXPIRATION_TIME = 10;
+    private static final int MAX_ACTIVE_TOKENS = 200;
     private static final String WAIT_KEY = "WAIT_KEY";
     private static final String ACTIVE_KEY = "ACTIVE_KEY";
 
     @Override
-    public QueueStatusResponse addToQueue(String userId, String flightId) {
-        long currentTime = System.currentTimeMillis();
-        long expirationTime = currentTime + EXPIRATION_TIME;
+    public QueueStatusResponseDto addToQueue(Long userId, Long concertScheduleId) {
+        try {
+            deleteTokens(userId);
 
-        // 먼저 active 토큰 개수를 확인하여, 200개 이하이면 바로 접속
-        long activeTokenCount = redisTemplate.opsForZSet().size(ACTIVE_KEY);
+            long currentTime = System.currentTimeMillis();
 
-        QueueToken queueToken = new QueueToken(userId, flightId, currentTime, expirationTime);
-        QueueStatusResponse response;
+            Long activeTokenCount = redisTemplate.opsForZSet().size(ACTIVE_KEY);
+            activeTokenCount = (activeTokenCount != null) ? activeTokenCount : 0L;
 
-        if (activeTokenCount < 200) {
-            redisTemplate.opsForZSet().add(ACTIVE_KEY, queueToken, currentTime);
-            response = modelMapper.map(queueToken, QueueStatusResponse.class);
-            response.setStatus("active");
-        } else {
-            redisTemplate.opsForZSet().add(WAIT_KEY, queueToken, currentTime);
-            long waitingOrder = redisTemplate.opsForZSet().rank(WAIT_KEY, queueToken);
-            long waitTime = (waitingOrder + 1) * 1000;
-            response = modelMapper.map(queueToken, QueueStatusResponse.class);
-            response.setStatus("waiting");
-            response.setQueueStatus(new QueueStatus(waitingOrder + 1, waitTime / 1000));
+            QueueToken queueToken = QueueToken.builder()
+                    .userId(userId)
+                    .concertScheduleId(concertScheduleId)
+                    .requestTime(currentTime)
+                    .build();
+
+            if (activeTokenCount < MAX_ACTIVE_TOKENS) {
+                redisTemplate.opsForZSet().add(ACTIVE_KEY, queueToken, currentTime);
+
+                // TTL을 설정하여 10분 후 만료되도록 설정
+                redisTemplate.expire(ACTIVE_KEY, EXPIRATION_TIME, TimeUnit.MINUTES);
+
+                return QueueStatusResponseDto.builder()
+                        .concertScheduleId(concertScheduleId)
+                        .status("active")
+                        .build();
+            } else {
+                redisTemplate.opsForZSet().add(WAIT_KEY, queueToken, currentTime);
+
+                // TTL을 설정하여 10분 후 만료되도록 설정
+                redisTemplate.expire(WAIT_KEY, EXPIRATION_TIME, TimeUnit.MINUTES);
+
+                Long waitingOrder = redisTemplate.opsForZSet().rank(WAIT_KEY, queueToken);
+                waitingOrder = (waitingOrder != null) ? waitingOrder : -1L;
+                long waitTime = (waitingOrder + 1) * 1000;
+
+                return QueueStatusResponseDto.builder()
+                        .concertScheduleId(concertScheduleId)
+                        .status("waiting")
+                        .waitingOrder(waitingOrder + 1)
+                        .remainingTime(waitTime / 1000)
+                        .build();
+            }
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.QUEUE_ERROR);
         }
-        return response;
+    }
+
+    private QueueToken findTokenInQueue(Long userId, String key) {
+        try {
+            return Optional.ofNullable(redisTemplate.opsForZSet().range(key, 0, -1))
+                    .orElse(Set.of())
+                    .stream()
+                    .filter(token -> token.getUserId().equals(userId))
+                    .findFirst()
+                    .orElse(null);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.REDIS_ERROR);
+        }
     }
 
     @Override
-    public QueueStatusResponse getQueueStatus(String userId, String flightId) {
-        Set<QueueToken> tokens = redisTemplate.opsForZSet().range(WAIT_KEY, 0, -1);
+    public QueueStatusResponseDto getQueueStatus(Long userId, Long concertScheduleId) {
+        try {
+            QueueToken token = findTokenInQueue(userId, WAIT_KEY);
+            if (token == null) {
+                token = findTokenInQueue(userId, ACTIVE_KEY);
+                if (token != null) {
+                    redisTemplate.opsForZSet().remove(ACTIVE_KEY, token);
 
-        QueueToken token = tokens.stream()
-                .filter(t -> t.getUserId().equals(userId))
-                .findFirst()
-                .orElse(null);
-
-        if (token != null) {
-            long currentTime = System.currentTimeMillis();
-
-            // 대기열에서 ACTIVE 상태인지 확인
-            if (redisTemplate.opsForZSet().rank(ACTIVE_KEY, token) != null) {
-                QueueStatusResponse response = modelMapper.map(token, QueueStatusResponse.class);
-                response.setStatus("active");
-                return response;
+                    return QueueStatusResponseDto.builder()
+                            .concertScheduleId(concertScheduleId)
+                            .status("active")
+                            .build();
+                }
+                throw new CustomException(ErrorCode.TOKEN_NOT_FOUND);
             }
 
-            long waitingOrder = redisTemplate.opsForZSet().rank(WAIT_KEY, token);
-            long round = (waitingOrder / 200) + 1;
-            long waitTime = (round - 1) * 10;
+            Long waitingOrder = redisTemplate.opsForZSet().rank(WAIT_KEY, token);
+            waitingOrder = (waitingOrder != null) ? waitingOrder : -1L;
+            long waitTime = ((waitingOrder / MAX_ACTIVE_TOKENS) * 10);
 
-            // 만료된 토큰이라면 대기열에서 삭제
-            if (currentTime > token.getExpirationTime()) {
-                redisTemplate.opsForZSet().remove(WAIT_KEY, token);
-                QueueStatusResponse response = modelMapper.map(token, QueueStatusResponse.class);
-                response.setStatus("expired");
-                return response;
-            }
-
-            // WAIT 상태라면 대기 순번과 남은 대기 시간 반환
-            QueueStatusResponse response = modelMapper.map(token, QueueStatusResponse.class);
-            response.setStatus("waiting");
-            response.setQueueStatus(new QueueStatus(waitingOrder + 1, waitTime));
-            return response;
+            return QueueStatusResponseDto.builder()
+                    .concertScheduleId(concertScheduleId)
+                    .status("waiting")
+                    .waitingOrder(waitingOrder + 1)
+                    .remainingTime(waitTime)
+                    .build();
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.QUEUE_ERROR);
         }
-
-        return new QueueStatusResponse(flightId, "not found", null);
     }
 
-    @Scheduled(fixedDelay = 10000) // 10초마다 실행
+    @Scheduled(fixedDelay = 10000)
     public void activateTokens() {
-        long currentTime = System.currentTimeMillis();
 
-        Set<QueueToken> tokensToActivate = redisTemplate.opsForZSet().range(WAIT_KEY, 0, 199); // 200개까지 조회
-        for (QueueToken token : tokensToActivate) {
-            if (currentTime > token.getExpirationTime()) {
-                redisTemplate.opsForZSet().remove(WAIT_KEY, token);
-                continue;
+        try {
+            log.info("Activating tokens...");
+
+            log.info("Removing all tokens from ACTIVE_KEY...");
+            redisTemplate.opsForZSet().removeRange(ACTIVE_KEY, 0, -1);
+
+            long currentTime = System.currentTimeMillis();
+            log.info("Current time: {}", currentTime);
+
+            Set<QueueToken> tokensToActivate = Optional.ofNullable(
+                    redisTemplate.opsForZSet().range(WAIT_KEY, 0, MAX_ACTIVE_TOKENS - 1)
+            ).orElse(Set.of());
+
+            log.info("Tokens to activate from WAIT_KEY: {}", tokensToActivate.size());
+
+            for (QueueToken token : tokensToActivate) {
+                    log.info("Token {} Moving to ACTIVE_KEY...", token);
+                    redisTemplate.opsForZSet().remove(WAIT_KEY, token);
+                    redisTemplate.opsForZSet().add(ACTIVE_KEY, token, token.getRequestTime());
             }
 
-            // 대기열에서 활성화
-            redisTemplate.opsForZSet().remove(WAIT_KEY, token);  // 대기열에서 제거
-            redisTemplate.opsForZSet().add(ACTIVE_KEY, token, token.getRequestTime());  // ACTIVE_KEY로 추가
+            log.info("Token activation process completed.");
+        } catch (Exception e) {
+            log.error("Error during token activation process: {}", e.getMessage(), e);
+            throw new CustomException(ErrorCode.ACTIVATE_ERROR);
         }
     }
 
-    @Scheduled(fixedDelay = 10000) // 10초마다 실행
-    public void deleteExpiredTokens() {
-        long currentTime = System.currentTimeMillis();
-
-        // 1. 대기열에서 만료된 토큰 삭제
-        Set<QueueToken> waitingTokens = redisTemplate.opsForZSet().range(WAIT_KEY, 0, -1); // WAIT_KEY에서 모든 토큰 조회
-        for (QueueToken token : waitingTokens) {
-            if (currentTime > token.getExpirationTime()) {
-                redisTemplate.opsForZSet().remove(WAIT_KEY, token);
-            }
+    public void deleteTokens(Long userId) {
+        QueueToken waitToken = findTokenInQueue(userId, WAIT_KEY);
+        if (waitToken != null) {
+            redisTemplate.opsForZSet().remove(WAIT_KEY, waitToken);
         }
 
-        // 2. 활성화된 토큰에서 만료된 토큰 삭제
-        Set<QueueToken> activeTokens = redisTemplate.opsForZSet().range(ACTIVE_KEY, 0, -1); // ACTIVE_KEY에서 모든 토큰 조회
-        for (QueueToken token : activeTokens) {
-            if (currentTime > token.getExpirationTime()) {
-                redisTemplate.opsForZSet().remove(ACTIVE_KEY, token);
-            }
+        QueueToken activeToken = findTokenInQueue(userId, ACTIVE_KEY);
+        if (activeToken != null) {
+            redisTemplate.opsForZSet().remove(ACTIVE_KEY, activeToken);
         }
     }
+
 }
-

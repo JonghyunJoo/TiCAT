@@ -9,7 +9,6 @@ import com.example.paymentservice.repository.PaymentRepository;
 import com.example.paymentservice.client.ReservationClient;
 import com.example.paymentservice.client.WalletClient;
 import com.example.paymentservice.event.PaymentCancelledEvent;
-import com.example.paymentservice.event.PaymentFailedEvent;
 import com.example.paymentservice.event.PaymentSuccessEvent;
 import com.example.paymentservice.messagequeue.PaymentEventProducer;
 import com.example.paymentservice.vo.ReservationResponse;
@@ -34,38 +33,32 @@ public class PaymentServiceImpl implements PaymentService {
         ReservationResponse reservation = reservationClient.getReservation(reservationId);
 
         Long walletBalance = walletClient.getBalance(userId);
-        if (walletBalance < reservation.getAmount()) {
-            PaymentFailedEvent failedEvent = new PaymentFailedEvent();
-            failedEvent.setReservationId(reservation.getReservationId());
-            failedEvent.setSeatId(reservation.getSeatId());
-            failedEvent.setUserId(userId);
-            paymentEventProducer.sendPaymentFailedEvent(failedEvent);
-
+        if (walletBalance < reservation.getPrice()) {
             throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
         }
 
         Payment payment = Payment.builder()
-                .reservationId(reservation.getReservationId())
+                .reservationId(reservation.getId())
                 .userId(userId)
-                .amount(reservation.getAmount())
+                .amount(reservation.getPrice())
                 .status(PaymentStatus.COMPLETED)
                 .build();
 
         paymentRepository.save(payment);
 
         PaymentSuccessEvent successEvent = new PaymentSuccessEvent();
-        successEvent.setReservationId(payment.getReservationId());
+        successEvent.setReservationId(payment.getId());
         successEvent.setSeatId(reservation.getSeatId());
         successEvent.setUserId(userId);
-        successEvent.setAmount(reservation.getAmount());
+        successEvent.setAmount(reservation.getPrice());
         paymentEventProducer.sendPaymentSuccessEvent(successEvent);
 
         return modelMapper.map(payment, PaymentResponseDto.class);
     }
 
     @Override
-    public void cancelPayment(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
+    public void cancelPayment(Long reservationId) {
+        Payment payment = paymentRepository.findByReservationId(reservationId)
                 .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
 
         if (!payment.getStatus().equals(PaymentStatus.COMPLETED)) {

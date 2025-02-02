@@ -8,18 +8,21 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
+@Table(name = "seats")
 public class Seat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long flightId;
+    private Long concertScheduleId;
+    private Long userId;
     private Long price;
     @Enumerated(EnumType.STRING)
     private SeatGrade seatGrade;
     @Enumerated(EnumType.STRING)
     private SeatStatus seatStatus;
-    private int number;
+    private int rowNumber;
+    private int columnNumber;
 
 
     public void updateStatus(SeatStatus status) {

@@ -1,15 +1,16 @@
 package com.example.queueservice.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class QueueToken {
-    private String userId;
-    private String flightId;
+    private Long userId;
+    private Long concertScheduleId;
     private Long requestTime;
-    private long expirationTime;
 }
