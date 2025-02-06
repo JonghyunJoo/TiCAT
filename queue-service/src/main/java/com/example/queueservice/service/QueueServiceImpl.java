@@ -1,7 +1,7 @@
 package com.example.queueservice.service;
 
-import com.example.queueservice.dto.QueueStatusResponseDto;
-import com.example.queueservice.entity.QueueToken;
+import com.example.queueservice.dto.QueueResponseDto;
+import com.example.queueservice.entity.Queue;
 import com.example.queueservice.exception.CustomException;
 import com.example.queueservice.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class QueueServiceImpl implements QueueService {
 
-    private final RedisTemplate<String, QueueToken> redisTemplate;
+    private final RedisTemplate<String, Queue> redisTemplate;
 
     private static final long EXPIRATION_TIME = 10;
     private static final int MAX_ACTIVE_TOKENS = 200;
@@ -27,7 +27,7 @@ public class QueueServiceImpl implements QueueService {
     private static final String ACTIVE_KEY = "ACTIVE_KEY";
 
     @Override
-    public QueueStatusResponseDto addToQueue(Long userId, Long concertScheduleId) {
+    public QueueResponseDto addToQueue(Long userId, Long concertScheduleId) {
         try {
             deleteTokens(userId);
 
@@ -36,33 +36,31 @@ public class QueueServiceImpl implements QueueService {
             Long activeTokenCount = redisTemplate.opsForZSet().size(ACTIVE_KEY);
             activeTokenCount = (activeTokenCount != null) ? activeTokenCount : 0L;
 
-            QueueToken queueToken = QueueToken.builder()
+            Queue queue = Queue.builder()
                     .userId(userId)
                     .concertScheduleId(concertScheduleId)
                     .requestTime(currentTime)
                     .build();
 
             if (activeTokenCount < MAX_ACTIVE_TOKENS) {
-                redisTemplate.opsForZSet().add(ACTIVE_KEY, queueToken, currentTime);
+                redisTemplate.opsForZSet().add(ACTIVE_KEY, queue, currentTime);
 
-                // TTL을 설정하여 10분 후 만료되도록 설정
                 redisTemplate.expire(ACTIVE_KEY, EXPIRATION_TIME, TimeUnit.MINUTES);
 
-                return QueueStatusResponseDto.builder()
+                return QueueResponseDto.builder()
                         .concertScheduleId(concertScheduleId)
                         .status("active")
                         .build();
             } else {
-                redisTemplate.opsForZSet().add(WAIT_KEY, queueToken, currentTime);
+                redisTemplate.opsForZSet().add(WAIT_KEY, queue, currentTime);
 
-                // TTL을 설정하여 10분 후 만료되도록 설정
                 redisTemplate.expire(WAIT_KEY, EXPIRATION_TIME, TimeUnit.MINUTES);
 
-                Long waitingOrder = redisTemplate.opsForZSet().rank(WAIT_KEY, queueToken);
+                Long waitingOrder = redisTemplate.opsForZSet().rank(WAIT_KEY, queue);
                 waitingOrder = (waitingOrder != null) ? waitingOrder : -1L;
                 long waitTime = (waitingOrder + 1) * 1000;
 
-                return QueueStatusResponseDto.builder()
+                return QueueResponseDto.builder()
                         .concertScheduleId(concertScheduleId)
                         .status("waiting")
                         .waitingOrder(waitingOrder + 1)
@@ -74,7 +72,7 @@ public class QueueServiceImpl implements QueueService {
         }
     }
 
-    private QueueToken findTokenInQueue(Long userId, String key) {
+    private Queue findTokenInQueue(Long userId, String key) {
         try {
             return Optional.ofNullable(redisTemplate.opsForZSet().range(key, 0, -1))
                     .orElse(Set.of())
@@ -88,15 +86,15 @@ public class QueueServiceImpl implements QueueService {
     }
 
     @Override
-    public QueueStatusResponseDto getQueueStatus(Long userId, Long concertScheduleId) {
+    public QueueResponseDto getQueueStatus(Long userId, Long concertScheduleId) {
         try {
-            QueueToken token = findTokenInQueue(userId, WAIT_KEY);
+            Queue token = findTokenInQueue(userId, WAIT_KEY);
             if (token == null) {
                 token = findTokenInQueue(userId, ACTIVE_KEY);
                 if (token != null) {
                     redisTemplate.opsForZSet().remove(ACTIVE_KEY, token);
 
-                    return QueueStatusResponseDto.builder()
+                    return QueueResponseDto.builder()
                             .concertScheduleId(concertScheduleId)
                             .status("active")
                             .build();
@@ -108,7 +106,7 @@ public class QueueServiceImpl implements QueueService {
             waitingOrder = (waitingOrder != null) ? waitingOrder : -1L;
             long waitTime = ((waitingOrder / MAX_ACTIVE_TOKENS) * 10);
 
-            return QueueStatusResponseDto.builder()
+            return QueueResponseDto.builder()
                     .concertScheduleId(concertScheduleId)
                     .status("waiting")
                     .waitingOrder(waitingOrder + 1)
@@ -131,13 +129,13 @@ public class QueueServiceImpl implements QueueService {
             long currentTime = System.currentTimeMillis();
             log.info("Current time: {}", currentTime);
 
-            Set<QueueToken> tokensToActivate = Optional.ofNullable(
+            Set<Queue> tokensToActivate = Optional.ofNullable(
                     redisTemplate.opsForZSet().range(WAIT_KEY, 0, MAX_ACTIVE_TOKENS - 1)
             ).orElse(Set.of());
 
             log.info("Tokens to activate from WAIT_KEY: {}", tokensToActivate.size());
 
-            for (QueueToken token : tokensToActivate) {
+            for (Queue token : tokensToActivate) {
                     log.info("Token {} Moving to ACTIVE_KEY...", token);
                     redisTemplate.opsForZSet().remove(WAIT_KEY, token);
                     redisTemplate.opsForZSet().add(ACTIVE_KEY, token, token.getRequestTime());
@@ -151,12 +149,12 @@ public class QueueServiceImpl implements QueueService {
     }
 
     public void deleteTokens(Long userId) {
-        QueueToken waitToken = findTokenInQueue(userId, WAIT_KEY);
+        Queue waitToken = findTokenInQueue(userId, WAIT_KEY);
         if (waitToken != null) {
             redisTemplate.opsForZSet().remove(WAIT_KEY, waitToken);
         }
 
-        QueueToken activeToken = findTokenInQueue(userId, ACTIVE_KEY);
+        Queue activeToken = findTokenInQueue(userId, ACTIVE_KEY);
         if (activeToken != null) {
             redisTemplate.opsForZSet().remove(ACTIVE_KEY, activeToken);
         }

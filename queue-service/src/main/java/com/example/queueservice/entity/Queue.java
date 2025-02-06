@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class QueueToken {
+public class Queue {
     private Long userId;
     private Long concertScheduleId;
     private Long requestTime;

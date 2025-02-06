@@ -19,7 +19,6 @@ public class ReservationEventProducer {
     public ReservationEventProducer(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
-    // 결제 취소 이벤트 발송
     public void sendReservationCanceledEvent(ReservationCanceledEvent event) {
         ObjectMapper mapper = new ObjectMapper();
         String jsonInString = "";
@@ -30,7 +29,7 @@ public class ReservationEventProducer {
         }
 
         kafkaTemplate.send("reservation_canceled_topic", jsonInString);
-        log.info("Sent PaymentCancelledEvent: {}", event);
+        log.info("Sent ReservationCanceledEvent: {}", event);
     }
 
     public void sendReservationSuccessEvent(ReservationSuccessEvent event){
@@ -43,6 +42,6 @@ public class ReservationEventProducer {
         }
 
         kafkaTemplate.send("reservation_success_topic", jsonInString);
-        log.info("Sent PaymentCancelledEvent: {}", event);
+        log.info("Sent ReservationSuccessEvent: {}", event);
     }
 }

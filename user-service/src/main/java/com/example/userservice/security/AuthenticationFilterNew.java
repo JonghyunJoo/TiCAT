@@ -1,8 +1,8 @@
 package com.example.userservice.security;
 
-import com.example.userservice.dto.UserDto;
+import com.example.userservice.dto.UserResponseDto;
 import com.example.userservice.service.UserService;
-import com.example.userservice.dto.RequestLoginDto;
+import com.example.userservice.dto.LoginRequestDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -44,7 +44,7 @@ public class AuthenticationFilterNew  extends UsernamePasswordAuthenticationFilt
             throws AuthenticationException {
         try {
 
-            RequestLoginDto creds = new ObjectMapper().readValue(req.getInputStream(), RequestLoginDto.class);
+            LoginRequestDto creds = new ObjectMapper().readValue(req.getInputStream(), LoginRequestDto.class);
 
             return getAuthenticationManager().authenticate(
                     new UsernamePasswordAuthenticationToken(creds.getEmail(), creds.getPassword(), new ArrayList<>()));
@@ -59,7 +59,7 @@ public class AuthenticationFilterNew  extends UsernamePasswordAuthenticationFilt
                                             Authentication auth) throws IOException, ServletException {
 
         String userName = ((User) auth.getPrincipal()).getUsername();
-        UserDto userDetails = userService.getUserDetailsByEmail(userName);
+        UserResponseDto userDetails = userService.getUserDetailsByEmail(userName);
 
         byte[] secretKeyBytes = Base64.getEncoder().encode(environment.getProperty("token.secret").getBytes());
 

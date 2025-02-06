@@ -1,8 +1,8 @@
 package com.example.walletservice.messagequeue;
 
-import com.example.walletservice.event.ReservationCanceledEvent;
+import com.example.walletservice.event.PaymentCanceledEvent;
+import com.example.walletservice.event.PaymentSuccessEvent;
 import com.example.walletservice.service.WalletService;
-import com.example.walletservice.vo.PaymentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,27 +21,27 @@ public class PaymentKafkaListener {
     @KafkaListener(topics = "payment_success_topic", groupId = "payment-service")
     public void onPaymentSuccess(String message) {
         try {
-            PaymentResponse response = objectMapper.readValue(message, PaymentResponse.class);
+            PaymentSuccessEvent paymentSuccessEvent = objectMapper.readValue(message, PaymentSuccessEvent.class);
 
-            walletService.deductBalance(response.getUserId(), response.getAmount());
+            walletService.deductBalance(paymentSuccessEvent.getUserId(), paymentSuccessEvent.getAmount());
 
-            log.info("Payment success for reservation {} and user {}", response.getReservationId(), response.getUserId());
+            log.info("Payment success for user {}, {}", paymentSuccessEvent.getUserId(), paymentSuccessEvent.getAmount());
         } catch (Exception e) {
             log.error("Error processing payment success message: {}", e.getMessage());
         }
     }
 
     // 결제 취소 시 처리
-    @KafkaListener(topics = "Reservation_cancelled_topic", groupId = "payment-service")
-    public void onPaymentCancelled(String message) {
+    @KafkaListener(topics = "payment_canceled_topic", groupId = "payment-service")
+    public void onPaymentCanceled(String message) {
         try {
-            ReservationCanceledEvent reservationCanceledEvent = objectMapper.readValue(message, ReservationCanceledEvent.class);
+            PaymentCanceledEvent paymentCanceledEvent = objectMapper.readValue(message, PaymentCanceledEvent.class);
 
-            walletService.refundBalance(reservationCanceledEvent.getUserId(), reservationCanceledEvent.getAmount());
+            walletService.refundBalance(paymentCanceledEvent.getUserId(), paymentCanceledEvent.getAmount());
 
-            log.info("Payment cancelled for user {}", reservationCanceledEvent.getUserId());
+            log.info("Payment canceled for user {}", paymentCanceledEvent.getUserId());
         } catch (Exception e) {
-            log.error("Error processing payment cancelled message: {}", e.getMessage());
+            log.error("Error processing payment canceled message: {}", e.getMessage());
         }
     }
 }

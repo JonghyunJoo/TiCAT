@@ -2,6 +2,7 @@ package com.example.walletservice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -19,7 +20,8 @@ public class TransactionHistory {
     private Long userId;
 
     private Long amount;
-    private String type;
+
+    @CreatedDate
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)

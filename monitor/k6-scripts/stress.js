@@ -1,87 +1,106 @@
 import http from 'k6/http';
 import { sleep, check, fail } from 'k6';
 
-const BASE_URL = 'http://172.25.0.1:8000/queue-service/';
-const scheduleId = 1;
-
-// export let options = {
-//     vus: 1, // 1 user looping for 1 minute
-//     duration: '10s',
-//     thresholds: {
-//         http_req_duration: ['p(99)<800'], // 요청의 99%가 800ms 미만으로 완료되어야 함
-//     },
-// };
-//
-// export default function () {
-//     // 대기열 요청
-//     const waitingRes = http.post(`${BASE_URL}`,JSON.stringify({
-//         userId: 1,
-//         concertScheduleId: scheduleId
-//     }), {
-//         headers: { 'Content-Type': 'application/json' },
-//     });
-//     check(waitingRes, {
-//         'waiting check': res => res.status === 200
-//     });
-//     if (waitingRes.status !== 200) {
-//         fail('Failed check for waiting-page');
-//     }
-//
-//     return waitingRes;
-// }
-
+const BASE_URL = 'http://172.25.0.1:8000';
+const rampup_duration = "5s"
+const steady_duration = "10s"
+const tps_A = 50;
+const tps_B = 100;
 export const options = {
-    stages: [
-        { duration: '5s', target: 200 },
-        { duration: '5s', target: 400 },
-        { duration: '5s', target: 600 },
-        { duration: '5s', target: 800 },
-        { duration: '5s', target: 1000 },
-        { duration: '10s', target: 1000 },
-        // { duration: '10s', target: 1000 },
-        // { duration: '10s', target: 1000 },
-        { duration: '5s', target: 0 }
-    ],
-    thresholds: {
-        http_req_duration: ['p(95)<500'], // 95% 요청이 500ms 이하
+    scenarios: {
+        load_test: {
+            executor: 'ramping-vus',
+            startVUs: 0,
+            stages: [
+                { duration: rampup_duration, target: tps_A },
+                { duration: steady_duration, target: tps_A },
+                { duration: rampup_duration, target: tps_A * 2},
+                { duration: steady_duration, target: tps_A * 2},
+                { duration: rampup_duration, target: tps_A * 3},
+                { duration: steady_duration, target: tps_A * 3},
+            ],
+        },
+        peak_test: {
+            executor: 'ramping-arrival-rate',
+            startRate: 10,
+            timeUnit: '1s',
+            preAllocatedVUs: 200,
+            maxVUs: 1000,
+            stages: [
+                { duration: rampup_duration, target: tps_B },
+                { duration: steady_duration, target: tps_B },
+                { duration: rampup_duration, target: tps_B * 2},
+                { duration: steady_duration, target: tps_B * 2},
+                { duration: rampup_duration, target: tps_B * 3},
+                { duration: steady_duration, target: tps_B * 3},
+            ],
+        },
     },
 };
 
 export default function () {
-    let userId = __VU;
+    const TEST_USER_IDS = [1, 2, 3, 4, 5];
+    const userId = TEST_USER_IDS[Math.floor(Math.random() * TEST_USER_IDS.length)];
 
-    // 1. 대기열 추가 요청 (POST)
-    let queueRes = http.post(`${BASE_URL}`, JSON.stringify({
+    const rechargePayload = JSON.stringify({
         userId: userId,
-        concertScheduleId: scheduleId
-    }), {
-        headers: { 'Content-Type': 'application/json' }
+        amount: 1000,
     });
 
-    check(queueRes, {
-        '대기열 응답 코드 200': (r) => r.status === 200,
+    const waitingRes = http.put(`${BASE_URL}/wallet-service/`, rechargePayload, {
+        headers: { 'Content-Type': 'application/json' },
     });
 
-    if (queueRes.status !== 200) {
-        console.error(`Failed queue request: ${queueRes.status} - ${queueRes.body}`);
+    console.log(`UserID: ${userId}, Response status: ${waitingRes.status}`);
+
+    check(waitingRes, {
+        'waiting check': res => res.status === 200
+    });
+
+    if (waitingRes.status !== 200) {
+        console.error(`Request failed for user ${userId} - Status: ${waitingRes.status}, Body: ${waitingRes.body}`);
         fail('Failed check for waiting-page');
     }
 
     sleep(1);
-
-// 2. 대기열 상태 확인 (GET)
-    let statusRes = http.get(`${BASE_URL}?userId=${userId}&concertScheduleId=${scheduleId}`, {
-        headers: { 'Content-Type': 'application/json' }
-    });
-
-    check(statusRes, {
-        '대기열 상태 응답 코드 200': (r) => r.status === 200,
-    });
-
-    if (statusRes.status !== 200) {
-        console.error(`Failed status check: ${statusRes.status} - ${statusRes.body}`);
-        fail('Failed check for queue status');
-    }
-
-    sleep(1);
 }
+
+
+// export default function () {
+//     let userId = __VU;
+//
+//     // 1. 대기열 추가 요청 (POST)
+//     let queueRes = http.post(`${BASE_URL}`, JSON.stringify({
+//         userId: userId,
+//         concertScheduleId: scheduleId
+//     }), {
+//         headers: { 'Content-Type': 'application/json' }
+//     });
+//
+//     check(queueRes, {
+//         '대기열 응답 코드 200': (r) => r.status === 200,
+//     });
+//
+//     if (queueRes.status !== 200) {
+//         console.error(`Failed queue request: ${queueRes.status} - ${queueRes.body}`);
+//         fail('Failed check for waiting-page');
+//     }
+//
+//     sleep(1);
+//
+// // 2. 대기열 상태 확인 (GET)
+//     let statusRes = http.get(`${BASE_URL}?userId=${userId}&concertScheduleId=${scheduleId}`, {
+//         headers: { 'Content-Type': 'application/json' }
+//     });
+//
+//     check(statusRes, {
+//         '대기열 상태 응답 코드 200': (r) => r.status === 200,
+//     });
+//
+//     if (statusRes.status !== 200) {
+//         console.error(`Failed status check: ${statusRes.status} - ${statusRes.body}`);
+//         fail('Failed check for queue status');
+//     }
+//
+//     sleep(1);
+// }

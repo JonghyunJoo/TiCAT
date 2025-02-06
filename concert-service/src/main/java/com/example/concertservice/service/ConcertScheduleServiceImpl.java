@@ -54,7 +54,7 @@ public class ConcertScheduleServiceImpl implements ConcertScheduleService {
             unless = "#result == null || #result.isEmpty()"
     )
     public List<ConcertScheduleResponseDto> getSchedulesByConcertId(Long concertId) {
-        List<ConcertSchedule> concertSchedules = concertScheduleRepository.findByConcertId(concertId);
+        List<ConcertSchedule> concertSchedules = concertScheduleRepository.findAllByConcertId(concertId);
 
         return concertSchedules.stream()
                 .map(schedule -> {

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "wallet-service")
 public interface WalletClient {
 
-    @GetMapping("/balance/{userId}")
+    @GetMapping("/{userId}")
     @CircuitBreaker(name = "default-circuitbreaker", fallbackMethod = "getBalanceFallback")
     Long getBalance(@PathVariable Long userId);
 

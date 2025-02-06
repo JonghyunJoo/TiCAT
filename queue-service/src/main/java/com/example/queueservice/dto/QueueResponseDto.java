@@ -6,7 +6,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class QueueStatusResponseDto {
+public class QueueResponseDto {
     private Long concertScheduleId;
     private String status;
     private long waitingOrder;

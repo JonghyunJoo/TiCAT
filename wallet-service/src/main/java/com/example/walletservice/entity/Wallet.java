@@ -4,20 +4,18 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@Table(name = "wallets", indexes = @Index(columnList = "user_id"))
 public class Wallet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;  // 유저 ID
+    private Long userId;
 
-    @Setter
-    private Long balance;   // 잔액
+    private Long balance;
 }
-
-

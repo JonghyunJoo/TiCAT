@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "A requested user object for user add")
-public class RequestUserDto {
+public class UserRequestDto {
     @Schema(title = "사용자 Email", description = "사용자 ID로 사용되는 Email 정보로써 로그인 시 사용")
     @NotNull(message = "Email cannot be null")
     @Size(min = 2, message = "Email not be less than two characters")

@@ -1,27 +1,21 @@
 package com.example.userservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 @Data
-@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserDto {
+@Builder
+public class UserResponseDto {
     private Long id;
     private String email;
+
     private String name;
-    private String pwd;
-    private Date createdAt;
-
-    private String decryptedPwd;
-
-    private String encryptedPwd;
 
     private Long balance;
-
 }

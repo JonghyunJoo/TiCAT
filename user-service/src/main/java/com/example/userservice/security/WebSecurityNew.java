@@ -48,7 +48,6 @@ public class WebSecurityNew {
         AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
 
         http.csrf( (csrf) -> csrf.disable());
-//        http.csrf(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests((authz) -> authz
                         .requestMatchers(new AntPathRequestMatcher("/actuator/**")).permitAll()

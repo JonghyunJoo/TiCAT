@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ReserveSeatConsumer {
+public class ReservationKafkaListener {
 
     private final SeatRepository seatRepository;
     private final ObjectMapper objectMapper;
@@ -25,19 +25,17 @@ public class ReserveSeatConsumer {
     @KafkaListener(topics = "reservation_success_topic", groupId = "seat-service")
     public void onReservationSuccess(String message) {
         try {
-            // 메시지를 ReservationSuccessEvent 객체로 변환
             ReservationSuccessEvent event = objectMapper.readValue(message, ReservationSuccessEvent.class);
 
-            // 각 Seat ID에 대해 상태 업데이트
-            for (Long seatId : event.getSeatId()) {
+            for (Long seatId : event.getSeatIdList()) {
                 Seat seat = seatRepository.findById(seatId)
                         .orElseThrow(() -> new IllegalArgumentException("Seat not found: " + seatId));
 
-                seat.updateStatus(SeatStatus.RESERVED);
+                seat.setSeatStatus(SeatStatus.RESERVED);
                 seatRepository.save(seat);
             }
 
-            log.info("Reservation success for user {}: seats {}", event.getUserId(), event.getSeatId());
+            log.info("Reservation success for user {}: seats {}", event.getUserId(), event.getSeatIdList());
         } catch (Exception e) {
             log.error("Error processing reservation success message: {}", e.getMessage(), e);
         }
@@ -49,13 +47,12 @@ public class ReserveSeatConsumer {
         try {
             ReservationCanceledEvent event = objectMapper.readValue(message, ReservationCanceledEvent.class);
 
-            // 좌석 목록에 대해 반복 처리
-            for (Long seatId : event.getSeatList()) {
+            for (Long seatId : event.getSeatIdList()) {
                 seatService.cancelSeatLock(seatId);
                 log.info("Seat lock canceled for seat ID: {}", seatId);
             }
 
-            log.info("Reservation canceled for seats: {}", event.getSeatList());
+            log.info("Reservation canceled for seats: {}", event.getSeatIdList());
         } catch (Exception e) {
             log.error("Error processing reservation canceled message: {}", e.getMessage(), e);
         }

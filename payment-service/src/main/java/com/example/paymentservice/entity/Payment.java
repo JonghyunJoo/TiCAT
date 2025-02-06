@@ -2,6 +2,8 @@ package com.example.paymentservice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,18 +16,12 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long reservationId;
     private Long userId;
     private Long amount;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
+    @CreatedDate
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-    public void updateStatus(PaymentStatus status) {
-        this.status = status;
-        this.updatedAt = LocalDateTime.now();
-    }
 }

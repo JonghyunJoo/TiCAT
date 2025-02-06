@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class TransactionHistoryRequestDto {
+    private Long userId;
     private int page;
     private int size;
 }

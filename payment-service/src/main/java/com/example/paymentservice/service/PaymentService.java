@@ -1,9 +1,12 @@
 package com.example.paymentservice.service;
 
+import com.example.paymentservice.dto.PaymentRequestDto;
 import com.example.paymentservice.dto.PaymentResponseDto;
 
-public interface PaymentService {
-    PaymentResponseDto processPayment(Long reservationId, Long userId);
+import java.util.List;
 
-    void cancelPayment(Long paymentId);
+public interface PaymentService {
+    PaymentResponseDto processPayment(Long userId, Long reservationGroupId);
+
+    void cancelPayment(List<Long> reservationIdList, Long userId);
 }

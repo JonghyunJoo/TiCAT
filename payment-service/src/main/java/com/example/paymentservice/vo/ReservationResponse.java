@@ -2,12 +2,15 @@ package com.example.paymentservice.vo;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class ReservationResponse {
-
-    private Long id; // 예약 ID
-    private Long userId; // 사용자 ID
-    private Long price; // 결제 금액 (예: 가격)
-    private Long seatId; // 좌석 ID
-
+    private Long id;
+    private Long userId;
+    private Long seatId;
+    private String reservationStatus;
+    private Long price;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

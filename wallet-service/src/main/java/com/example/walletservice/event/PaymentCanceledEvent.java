@@ -1,12 +1,11 @@
 package com.example.walletservice.event;
 
+import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class ReservationCanceledEvent {
-    private List<Long> seatList;
+@Builder
+public class PaymentCanceledEvent {
     private Long userId;
     private Long amount;
 }

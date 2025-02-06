@@ -1,4 +1,4 @@
-package com.example.seatservice.config;
+package com.example.walletservice.config;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;

@@ -12,7 +12,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "concertSchedules", indexes = @Index(columnList = "concert_id"))
+@Table(name = "concertSchedules", indexes = @Index(name="idx_concert_id", columnList = "concert_id"))
 public class ConcertSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

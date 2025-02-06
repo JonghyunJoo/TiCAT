@@ -1,22 +1,17 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.UserDto;
-import com.example.userservice.entity.User;
 import com.example.userservice.service.UserService;
-import com.example.userservice.dto.RequestUserDto;
-import com.example.userservice.dto.ResponseUserDto;
+import com.example.userservice.dto.UserRequestDto;
+import com.example.userservice.dto.UserResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -34,16 +29,10 @@ public class UserController {
     }
     )
     @PostMapping("/users")
-    public ResponseEntity<ResponseUserDto> createUser(@RequestBody RequestUserDto user) {
-        ModelMapper mapper = new ModelMapper();
-        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+    public ResponseEntity<UserResponseDto> createUser(@RequestBody UserRequestDto userRequestDto) {
+        UserResponseDto userResponseDto= userService.createUser(userRequestDto);
 
-        UserDto userDto = mapper.map(user, UserDto.class);
-        userService.createUser(userDto);
-
-        ResponseUserDto responseUser = mapper.map(userDto, ResponseUserDto.class);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDto);
     }
     @Operation(summary = "전체 사용자 목록조회 API", description = "현재 회원 가입 된 전체 사용자 목록을 조회하기 위한 API")
     @ApiResponses({
@@ -54,13 +43,9 @@ public class UserController {
     }
     )
     @GetMapping("/users")
-    public ResponseEntity<List<ResponseUserDto>> getUsers() {
-        Iterable<User> userList = userService.getUserByAll();
-
-        List<ResponseUserDto> result = new ArrayList<>();
-        userList.forEach(v -> result.add(new ModelMapper().map(v, ResponseUserDto.class)));
-
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+    public ResponseEntity<List<UserResponseDto>> getUsers() {
+        List<UserResponseDto> userResponseDtoList = userService.getUserByAll();
+        return ResponseEntity.ok(userResponseDtoList);
     }
 
     @Operation(summary = "사용자 정보 상세조회 API", description = "사용자에 대한 상세 정보조회를 위한 API (사용자 정보 + 주문 내역 확인)")
@@ -73,13 +58,9 @@ public class UserController {
     }
     )
     @GetMapping("/users/{Id}")
-    public ResponseEntity<ResponseUserDto> getUser(@PathVariable("Id") Long Id) {
-        UserDto userDto = userService.getUserById(Id);
-        if (userDto == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+    public ResponseEntity<UserResponseDto> getUser(@PathVariable("Id") Long Id) {
+        UserResponseDto userResponseDto = userService.getUserById(Id);
 
-        ResponseUserDto returnValue = new ModelMapper().map(userDto, ResponseUserDto.class);
-        return ResponseEntity.status(HttpStatus.OK).body(returnValue);
+        return ResponseEntity.ok(userResponseDto);
     }
 }

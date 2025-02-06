@@ -1,7 +1,7 @@
 package com.example.queueservice.controller;
 
 import com.example.queueservice.dto.QueueRequestDto;
-import com.example.queueservice.dto.QueueStatusResponseDto;
+import com.example.queueservice.dto.QueueResponseDto;
 import com.example.queueservice.service.QueueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,8 +26,8 @@ public class QueueController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     @PostMapping("/")
-    public ResponseEntity<QueueStatusResponseDto> createQueue(@RequestBody QueueRequestDto queueRequestDto) {
-        QueueStatusResponseDto response = queueService.addToQueue(queueRequestDto.getUserId(), queueRequestDto.getConcertScheduleId());
+    public ResponseEntity<QueueResponseDto> createQueue(@RequestBody QueueRequestDto queueRequestDto) {
+        QueueResponseDto response = queueService.addToQueue(queueRequestDto.getUserId(), queueRequestDto.getConcertScheduleId());
         return ResponseEntity.ok(response);
     }
 
@@ -38,10 +38,10 @@ public class QueueController {
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     @GetMapping("/")
-    public ResponseEntity<QueueStatusResponseDto> getQueueStatus(
+    public ResponseEntity<QueueResponseDto> getQueueStatus(
             @RequestParam Long userId,
             @RequestParam Long concertScheduleId) {
-        QueueStatusResponseDto response = queueService.getQueueStatus(userId, concertScheduleId);
+        QueueResponseDto response = queueService.getQueueStatus(userId, concertScheduleId);
         return ResponseEntity.ok(response);
     }
 
@@ -51,8 +51,8 @@ public class QueueController {
             @ApiResponse(responseCode = "404", description = "Not Found (대기열이 존재하지 않음)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @DeleteMapping("/{concertScheduleId}")
-    public ResponseEntity<String> deleteQueue(@RequestHeader("X-User-Id") Long userId) {
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<String> deleteQueue(@PathVariable Long userId) {
         queueService.deleteTokens(userId);
         return ResponseEntity.ok("대기열 삭제 완료");
     }

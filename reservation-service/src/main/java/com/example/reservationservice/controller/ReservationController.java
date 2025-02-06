@@ -1,10 +1,8 @@
 package com.example.reservationservice.controller;
 
-import com.example.reservationservice.dto.ReservationGroupResponseDto;
-import com.example.reservationservice.dto.ReservationResponseDto;
+import com.example.reservationservice.dto.*;
 import com.example.reservationservice.service.ReservationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,9 +28,12 @@ public class ReservationController {
     })
     @PostMapping()
     public ResponseEntity<ReservationGroupResponseDto> createReservation(
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestBody List<Long> seatList) {
-        ReservationGroupResponseDto groupResponseDto = reservationService.createReservation(seatList, userId);
+
+            @RequestBody ReservationRequestDto reservationRequestDto) {
+        ReservationGroupResponseDto groupResponseDto
+                = reservationService.createReservation(
+                        reservationRequestDto.getSeatIdList(),
+                        reservationRequestDto.getUserId());
         return ResponseEntity.ok(groupResponseDto);
     }
 
@@ -42,9 +43,9 @@ public class ReservationController {
             @ApiResponse(responseCode = "404", description = "Not Found (예약 정보 없음)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @GetMapping()
+    @GetMapping("/{userId}")
     public ResponseEntity<List<ReservationGroupResponseDto>> getUserReservationGroups(
-            @RequestHeader("X-User-Id") Long userId) {
+            @PathVariable Long userId) {
         List<ReservationGroupResponseDto> reservationGroupList = reservationService.getReservationGroupsByUserId(userId);
         return ResponseEntity.ok(reservationGroupList);
     }
@@ -75,29 +76,41 @@ public class ReservationController {
         return ResponseEntity.ok(reservationResponse);
     }
 
+    @Operation(summary = "예약 그룹 총액 조회", description = "예약 그룹 ID를 기반으로 예약 그룹의 총액을 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "404", description = "Not Found (예약 그룹 정보 없음)"),
+            @ApiResponse(responseCode = "500", description = "Internal Server Error")
+    })
+    @GetMapping("/totalPrice/{reservationGroupId}")
+    public ResponseEntity<Long> getTotalPrice(@PathVariable Long reservationGroupId) {
+        Long totalPrice = reservationService.getTotalPriceByReservationGroupId(reservationGroupId);
+        return ResponseEntity.ok(totalPrice);
+    }
+
     @Operation(summary = "예약 취소", description = "특정 예약 ID를 사용하여 예약을 취소합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "예약 취소 성공"),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음")
     })
-    @PostMapping("/reservations/{reservationId}")
+    @PutMapping("/reservations")
     public ResponseEntity<Void> cancelReservation(
-            @RequestHeader("X-User-Id") Long userId,
-            @Parameter(description = "취소할 예약 ID", required = true) @PathVariable Long reservationId) {
-        reservationService.cancelReservation(userId, reservationId);
+            @RequestBody ReservationCancelRequestDto reservationCancelRequestDto) {
+        reservationService.cancelReservation(reservationCancelRequestDto.getUserId(), reservationCancelRequestDto.getReservationIdList());
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "예약 그룹 취소", description = "특정 예약 ID를 사용하여 예약을 취소합니다.")
+    @Operation(summary = "예약 그룹 취소", description = "특정 예약 그룹 ID를 사용하여 예약을 취소합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "예약 취소 성공"),
-            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음")
+            @ApiResponse(responseCode = "204", description = "예약 그룹 취소 성공"),
+            @ApiResponse(responseCode = "404", description = "예약 그룹을 찾을 수 없음")
     })
-    @PostMapping("/reservationGroups/{reservationGroupId}")
+    @PutMapping("/reservationGroups")
     public ResponseEntity<Void> cancelReservationGroup(
-            @RequestHeader("X-User-Id") Long userId,
-            @Parameter(description = "취소할 예약 ID", required = true) @PathVariable Long reservationGroupId) {
-        reservationService.cancelReservationGroup(userId, reservationGroupId);
+            @RequestBody ReservationGrouplRequestDto reservationGrouplRequestDto) {
+        reservationService.cancelReservationGroup(
+                reservationGrouplRequestDto.getUserId(),
+                reservationGrouplRequestDto.getReservationGroupId());
         return ResponseEntity.noContent().build();
     }
 }

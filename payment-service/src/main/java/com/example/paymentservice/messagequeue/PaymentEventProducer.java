@@ -1,6 +1,7 @@
 package com.example.paymentservice.messagequeue;
 
-import com.example.paymentservice.event.PaymentCancelledEvent;
+import com.example.paymentservice.event.PaymentCanceledEvent;
+import com.example.paymentservice.event.PaymentFailedEvent;
 import com.example.paymentservice.event.PaymentSuccessEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,17 +35,30 @@ public class PaymentEventProducer {
         log.info("Sent PaymentSuccessEvent: {}", event);
     }
 
-    // 결제 취소 이벤트 발송
-    public void sendPaymentCancelledEvent(PaymentCancelledEvent event) {
+    public void sendPaymentFailedEvent(PaymentFailedEvent event) {
         ObjectMapper mapper = new ObjectMapper();
         String jsonInString = "";
         try {
             jsonInString = mapper.writeValueAsString(event);
         } catch (JsonProcessingException ex) {
-            log.error("Error serializing PaymentCancelledEvent: ", ex);
+            log.error("Error serializing PaymentSuccessEvent: ", ex);
         }
 
-        kafkaTemplate.send("payment_cancelled_topic", jsonInString);
-        log.info("Sent PaymentCancelledEvent: {}", event);
+        kafkaTemplate.send("payment_failed_topic", jsonInString);
+        log.info("Sent PaymentSuccessEvent: {}", event);
+    }
+
+    // 결제 취소 이벤트 발송
+    public void sendPaymentCanceledEvent(PaymentCanceledEvent event) {
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonInString = "";
+        try {
+            jsonInString = mapper.writeValueAsString(event);
+        } catch (JsonProcessingException ex) {
+            log.error("Error serializing PaymentCanceledEvent: ", ex);
+        }
+
+        kafkaTemplate.send("payment_canceled_topic", jsonInString);
+        log.info("Sent PaymentCanceledEvent: {}", event);
     }
 }

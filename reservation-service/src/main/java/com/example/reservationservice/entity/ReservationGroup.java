@@ -2,14 +2,19 @@ package com.example.reservationservice.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
+@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "reservation_groups", indexes = @Index(columnList = "user_id"))
 public class ReservationGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,16 +25,9 @@ public class ReservationGroup {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
+    @CreatedDate
     private LocalDateTime createdAt;
+
+    @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    public void confirmGroupReservation() {
-        this.status = ReservationStatus.RESERVED;
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    public void cancelGroupReservation() {
-        this.status = ReservationStatus.CANCELLED;
-        this.updatedAt = LocalDateTime.now();
-    }
 }

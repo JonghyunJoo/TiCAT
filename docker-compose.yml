@@ -38,6 +38,22 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  mysql:
+    image: mysql:8.0
+    container_name: msa-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: msa_user
+      MYSQL_PASSWORD: msa_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+volumes:
+  mysql_data:
 
 #  config-service:
 #    image: jonghyunjoo1235/config-service

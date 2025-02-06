@@ -33,15 +33,15 @@ public class PaymentKafkaListener {
 
     // 결제 취소 시 처리
     @KafkaListener(topics = "payment_failed_topic", groupId = "payment-service")
-    public void onPaymentCancelled(String message) {
+    public void onPaymentCanceled(String message) {
         try {
             PaymentFailedEvent event = objectMapper.readValue(message, PaymentFailedEvent.class);
 
             reservationService.cancelReservationGroup(event.getUserId(), event.getReservationGroupId());
 
-            log.info("Payment cancelled for reservation {} and user {}", event.getReservationGroupId(), event.getUserId());
+            log.info("Payment failed for reservationGroup {} and user {}", event.getReservationGroupId(), event.getUserId());
         } catch (Exception e) {
-            log.error("Error processing payment cancelled message: {}", e.getMessage());
+            log.error("Error processing payment failed message: {}", e.getMessage());
         }
     }
 }

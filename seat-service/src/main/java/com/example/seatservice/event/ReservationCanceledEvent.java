@@ -8,7 +8,8 @@ import java.util.List;
 @Data
 @Builder
 public class ReservationCanceledEvent {
-    private List<Long> seatList;
+    private List<Long> seatIdList;
     private Long userId;
-    private Long amount;
+    private List<Long> reservationIdList;
 }
+

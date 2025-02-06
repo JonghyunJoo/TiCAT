@@ -7,7 +7,9 @@ import java.util.List;
 
 @Data
 @Builder
-public class PaymentSuccessEvent {
+public class ReservationCanceledEvent {
+    private List<Long> seatIdList;
     private Long userId;
-    private Long amount;
+    private List<Long> reservationIdList;
 }
+

@@ -1,14 +1,16 @@
 package com.example.paymentservice.service;
 
+import com.example.paymentservice.dto.PaymentRequestDto;
 import com.example.paymentservice.dto.PaymentResponseDto;
 import com.example.paymentservice.entity.Payment;
 import com.example.paymentservice.entity.PaymentStatus;
+import com.example.paymentservice.event.PaymentFailedEvent;
 import com.example.paymentservice.exception.CustomException;
 import com.example.paymentservice.exception.ErrorCode;
 import com.example.paymentservice.repository.PaymentRepository;
 import com.example.paymentservice.client.ReservationClient;
 import com.example.paymentservice.client.WalletClient;
-import com.example.paymentservice.event.PaymentCancelledEvent;
+import com.example.paymentservice.event.PaymentCanceledEvent;
 import com.example.paymentservice.event.PaymentSuccessEvent;
 import com.example.paymentservice.messagequeue.PaymentEventProducer;
 import com.example.paymentservice.vo.ReservationResponse;
@@ -16,6 +18,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -29,51 +34,69 @@ public class PaymentServiceImpl implements PaymentService {
     private final ModelMapper modelMapper;
 
     @Override
-    public PaymentResponseDto processPayment(Long reservationId, Long userId) {
-        ReservationResponse reservation = reservationClient.getReservation(reservationId);
+    @Transactional
+    public PaymentResponseDto processPayment(Long userId, Long reservationGroupId) {
+        Long amount = reservationClient.getTotalPrice(reservationGroupId);
 
         Long walletBalance = walletClient.getBalance(userId);
-        if (walletBalance < reservation.getPrice()) {
+        if (walletBalance < amount) {
+            PaymentFailedEvent failedEvent = PaymentFailedEvent.builder()
+                    .reservationGroupId(reservationGroupId)
+                    .userId(userId)
+                    .build();
+            paymentEventProducer.sendPaymentFailedEvent(failedEvent);
             throw new CustomException(ErrorCode.INSUFFICIENT_BALANCE);
         }
 
         Payment payment = Payment.builder()
-                .reservationId(reservation.getId())
                 .userId(userId)
-                .amount(reservation.getPrice())
+                .amount(amount)
                 .status(PaymentStatus.COMPLETED)
                 .build();
 
         paymentRepository.save(payment);
 
-        PaymentSuccessEvent successEvent = new PaymentSuccessEvent();
-        successEvent.setReservationId(payment.getId());
-        successEvent.setSeatId(reservation.getSeatId());
-        successEvent.setUserId(userId);
-        successEvent.setAmount(reservation.getPrice());
-        paymentEventProducer.sendPaymentSuccessEvent(successEvent);
+        paymentEventProducer.sendPaymentSuccessEvent(
+                PaymentSuccessEvent.builder()
+                .userId(userId)
+                .amount(amount)
+                .build());
 
         return modelMapper.map(payment, PaymentResponseDto.class);
     }
 
     @Override
-    public void cancelPayment(Long reservationId) {
-        Payment payment = paymentRepository.findByReservationId(reservationId)
-                .orElseThrow(() -> new CustomException(ErrorCode.PAYMENT_NOT_FOUND));
+    @Transactional
+    public void cancelPayment(List<Long> reservationIds, Long userId) {
+        log.info("Canceling payments for reservations: {} by user: {}", reservationIds, userId);
 
-        if (!payment.getStatus().equals(PaymentStatus.COMPLETED)) {
-            throw new CustomException(ErrorCode.INVALID_PAYMENT_STATUS);
-        }
+        List<ReservationResponse> reservations = reservationIds.stream()
+                .map(reservationClient::getReservation)
+                .toList();
 
-        ReservationResponse reservation = reservationClient.getReservation(payment.getReservationId());
+        long totalAmount = reservations.stream()
+                .mapToLong(ReservationResponse::getPrice)
+                .sum();
 
-        PaymentCancelledEvent cancelledEvent = new PaymentCancelledEvent();
-        cancelledEvent.setReservationId(payment.getReservationId());
-        cancelledEvent.setSeatId(reservation.getSeatId());
-        cancelledEvent.setUserId(payment.getUserId());
-        paymentEventProducer.sendPaymentCancelledEvent(cancelledEvent);
+        List<Long> seatIds = reservations.stream()
+                .map(ReservationResponse::getSeatId)
+                .toList();
 
-        payment.updateStatus(PaymentStatus.CANCELLED);
+        PaymentCanceledEvent canceledEvent = PaymentCanceledEvent.builder()
+                .userId(userId)
+                .amount(totalAmount)
+                .build();
+
+        paymentEventProducer.sendPaymentCanceledEvent(canceledEvent);
+        log.info("Sent PaymentCanceledEvent for user: {}, amount: {}", userId, totalAmount);
+
+        Payment payment = Payment.builder()
+                .userId(userId)
+                .amount(totalAmount)
+                .status(PaymentStatus.CANCELLED)
+                .build();
+
         paymentRepository.save(payment);
+        log.info("Saved canceled payment for user: {}, amount: {}", userId, totalAmount);
     }
 }

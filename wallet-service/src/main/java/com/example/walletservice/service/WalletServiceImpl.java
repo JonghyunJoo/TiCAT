@@ -1,5 +1,6 @@
 package com.example.walletservice.service;
 
+import com.example.walletservice.config.RedissonConfig;
 import com.example.walletservice.dto.TransactionHistoryResponseDto;
 import com.example.walletservice.entity.TransactionHistory;
 import com.example.walletservice.entity.TransactionType;
@@ -9,18 +10,23 @@ import com.example.walletservice.exception.ErrorCode;
 import com.example.walletservice.repository.TransactionHistoryRepository;
 import com.example.walletservice.repository.WalletRepository;
 import com.example.walletservice.dto.WalletResponseDto;
+import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,8 +36,10 @@ public class WalletServiceImpl implements WalletService {
 
     private final WalletRepository walletRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
+    private RedissonClient redissonClient;
     private ModelMapper modelMapper;
 
+    @Transactional
     public WalletResponseDto createWallet(Long userId) {
         Optional<Wallet> walletOpt = walletRepository.findByUserId(userId);
         if (walletOpt.isPresent()) {
@@ -48,48 +56,61 @@ public class WalletServiceImpl implements WalletService {
         return modelMapper.map(savedWallet, WalletResponseDto.class);
     }
 
+    // 잔액 충전
+    @Transactional
+    public void chargeWallet(Long userId, Long amount) {
+        String lockKey = "wallet-lock:" + userId;
+        RLock lock = redissonClient.getLock(lockKey);
+
+        try {
+            if (!lock.tryLock(1, 5, TimeUnit.SECONDS)) {
+                throw new CustomException(ErrorCode.CONCURRENT_CHARGE_FAILED);
+            }
+
+            Wallet wallet = walletRepository.findByUserId(userId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
+
+            wallet.setBalance(wallet.getBalance() + amount);
+
+            saveTransactionHistory(userId, wallet, amount, TransactionType.CHARGE);
+
+            log.info("Charged {} to user {} balance. New balance: {}", amount, userId, wallet.getBalance());
+
+        } catch (InterruptedException e) {
+            log.error("Error while acquiring Redis lock for user {}: {}", userId, e.getMessage());
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+
     // 잔액 차감
+    @Transactional
     public void deductBalance(Long userId, Long amount) {
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
 
-        // 잔액 차감
         if (wallet.getBalance() < amount) {
             throw new IllegalArgumentException("Insufficient balance");
         }
         wallet.setBalance(wallet.getBalance() - amount);
 
-        walletRepository.save(wallet);
-
-        // 거래 내역 저장 (결제 차감)
         saveTransactionHistory(userId, wallet, amount, TransactionType.PAYMENT);
 
         log.info("Deducted {} from user {} balance. New balance: {}", amount, userId, wallet.getBalance());
     }
 
-    // 잔액 충전
-    public void chargeWallet(Long userId, Long amount) {
-        Wallet wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
-
-        wallet.setBalance(wallet.getBalance() + amount);
-        walletRepository.save(wallet);
-
-        // 거래 내역 저장 (충전)
-        saveTransactionHistory(userId, wallet, amount, TransactionType.CHARGE);
-
-        log.info("Charged {} to user {} balance. New balance: {}", amount, userId, wallet.getBalance());
-    }
-
     // 결제 취소 시 환불
+    @Transactional
     public void refundBalance(Long userId, Long amount) {
         Wallet wallet = walletRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.WALLET_NOT_FOUND));
 
         wallet.setBalance(wallet.getBalance() + amount);
-        walletRepository.save(wallet);
 
-        // 거래 내역 저장 (환불)
         saveTransactionHistory(userId, wallet, amount, TransactionType.REFUND);
 
         log.info("Refunded {} to user {} balance. New balance: {}", amount, userId, wallet.getBalance());
@@ -99,7 +120,6 @@ public class WalletServiceImpl implements WalletService {
     private void saveTransactionHistory(Long userId, Wallet wallet, Long amount, TransactionType transactionType) {
         TransactionHistory transactionHistory = TransactionHistory.builder()
                 .amount(amount)
-                .type(transactionType.name())
                 .userId(userId)
                 .createdAt(LocalDateTime.now(Clock.systemUTC()))
                 .transactionType(transactionType)

@@ -8,7 +8,9 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "seats")
+@Table(name = "seats", indexes ={
+        @Index(columnList = "concert_schedule_id"),
+        @Index(name = "idx_status_cs_id", columnList = "seat_status, concert_schedule_id")})
 public class Seat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,10 +25,5 @@ public class Seat {
     private SeatStatus seatStatus;
     private int rowNumber;
     private int columnNumber;
-
-
-    public void updateStatus(SeatStatus status) {
-        this.seatStatus = status;
-    }
 
 }

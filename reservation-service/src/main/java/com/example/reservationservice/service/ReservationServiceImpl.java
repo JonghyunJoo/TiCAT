@@ -40,7 +40,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public ReservationGroupResponseDto createReservation(List<Long> seats, Long userId) {
-        log.info("Creating reservation for user: {}, seats: {}", userId, seats);
+        log.info("Creating reservation group for user: {}", userId);
 
         ReservationGroup reservationGroup = ReservationGroup.builder()
                 .userId(userId)
@@ -50,14 +50,16 @@ public class ReservationServiceImpl implements ReservationService {
         reservationGroupRepository.save(reservationGroup);
 
         List<Reservation> reservations = new ArrayList<>();
+
         for (Long seatId : seats) {
             try {
                 SeatResponse seatResponse = seatClient.getSeatById(seatId);
+                long seatPrice = seatResponse.getPrice();
                 Reservation reservation = Reservation.builder()
                         .userId(userId)
                         .seatId(seatId)
                         .reservationStatus(ReservationStatus.RESERVING)
-                        .price(seatResponse.getPrice())
+                        .price(seatPrice)
                         .createdAt(LocalDateTime.now())
                         .reservationGroup(reservationGroup)
                         .build();
@@ -71,7 +73,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservationRepository.saveAll(reservations);
 
         ReservationSuccessEvent successEvent = ReservationSuccessEvent.builder()
-                .seatId(seats)
+                .seatIdList(seats)
                 .userId(userId)
                 .build();
 
@@ -96,14 +98,10 @@ public class ReservationServiceImpl implements ReservationService {
         ReservationGroup reservationGroup = reservationGroupRepository.findById(reservationGroupId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_GROUP_NOT_FOUND));
 
-        reservationGroup.confirmGroupReservation();
-        reservationGroupRepository.save(reservationGroup);
+        reservationGroup.setStatus(ReservationStatus.RESERVED);
 
-        List<Reservation> reservations = reservationRepository.findAllByReservationGroupId(reservationGroupId);
-        reservations.forEach(Reservation::confirmReservation);
-
-        reservationRepository.saveAll(reservations);
-        log.info("Completed reservation group: {}", reservationGroupId);
+        int updatedCount = reservationRepository.updateReservationStatusByGroupId(ReservationStatus.RESERVED, reservationGroupId);
+        log.info("Updated {} reservations for group {}", updatedCount, reservationGroupId);
     }
 
     @Override
@@ -119,57 +117,67 @@ public class ReservationServiceImpl implements ReservationService {
             throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
 
-        reservationGroup.cancelGroupReservation();
-        reservationGroupRepository.save(reservationGroup);
+        reservationGroup.setStatus(ReservationStatus.CANCELLED);
+
+        int updatedCount = reservationRepository.updateReservationStatusByGroupId(ReservationStatus.CANCELLED, reservationGroupId);
+        log.info("Updated {} reservations to CANCELLED", updatedCount);
 
         List<Reservation> reservations = reservationRepository.findAllByReservationGroupId(reservationGroupId);
-        List<Long> seatList = new ArrayList<>();
-        long totalAmount = 0;
+        List<Long> seatList = reservations.stream()
+                .map(Reservation::getSeatId)
+                .toList();
 
-        for (Reservation reservation : reservations) {
-            reservation.cancelReservation();
-            seatList.add(reservation.getSeatId());
-            totalAmount += reservation.getPrice();
-        }
-
-        reservationRepository.saveAll(reservations);
+        List<Long> reservationIdList = reservations.stream()
+                .map(Reservation::getId)
+                .toList();
 
         ReservationCanceledEvent event = ReservationCanceledEvent.builder()
-                .seatList(seatList)
+                .seatIdList(seatList)
                 .userId(userId)
-                .amount(totalAmount)
+                .reservationIdList(reservationIdList)
                 .build();
 
         reservationEventProducer.sendReservationCanceledEvent(event);
-        log.info("Sent ReservationCanceledEvent for user: {}, amount: {}", userId, totalAmount);
+        log.info("Sent ReservationCanceledEvent for user: {}", userId);
     }
 
     @Override
     @Transactional
-    public void cancelReservation(Long userId, Long reservationId) {
-        log.info("Canceling reservation: {} for user: {}", reservationId, userId);
+    public void cancelReservation(Long userId, List<Long> reservationIdList) {
+        log.info("Canceling reservations: {} for user: {}", reservationIdList, userId);
 
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new CustomException(ErrorCode.RESERVATION_NOT_FOUND));
+        List<Reservation> reservations = reservationRepository.findAllById(reservationIdList);
 
-        if (!reservation.getUserId().equals(userId)) {
-            log.warn("User {} is not authorized to cancel reservation {}", userId, reservationId);
-            throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
+        if (reservations.isEmpty()) {
+            throw new CustomException(ErrorCode.RESERVATION_NOT_FOUND);
         }
 
-        reservation.cancelReservation();
-        reservationRepository.save(reservation);
+        for (Reservation reservation : reservations) {
+            if (!reservation.getUserId().equals(userId)) {
+                log.warn("User {} is not authorized to cancel reservation {}", userId, reservation.getId());
+                throw new CustomException(ErrorCode.UNAUTHORIZED_ACCESS);
+            }
+            reservation.setReservationStatus(ReservationStatus.CANCELLED);
+        }
+
+        List<Long> seatIdList = reservations.stream()
+                .map(Reservation::getSeatId)
+                .collect(Collectors.toList());
 
         ReservationCanceledEvent event = ReservationCanceledEvent.builder()
-                .seatList(Collections.singletonList(reservation.getSeatId()))
+                .seatIdList(seatIdList)
                 .userId(userId)
-                .amount(reservation.getPrice())
+                .reservationIdList(reservationIdList)
                 .build();
 
         reservationEventProducer.sendReservationCanceledEvent(event);
-        log.info("Sent ReservationCanceledEvent for user: {}, seatId: {}", userId, reservation.getSeatId());
+        log.info("Sent ReservationCanceledEvent for user: {}, seatIds: {}", userId, seatIdList);
     }
 
+    public Long getTotalPriceByReservationGroupId(Long reservationGroupId) {
+        return reservationRepository.findTotalPriceByReservationGroupId(reservationGroupId)
+                .orElse(0L);
+    }
 
     @Override
     public ReservationResponseDto getReservationById(Long reservationId) {

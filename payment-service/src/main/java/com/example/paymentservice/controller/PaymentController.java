@@ -1,5 +1,6 @@
 package com.example.paymentservice.controller;
 
+import com.example.paymentservice.dto.PaymentRequestDto;
 import com.example.paymentservice.dto.PaymentResponseDto;
 import com.example.paymentservice.service.PaymentService;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,25 +25,13 @@ public class PaymentController {
             @ApiResponse(responseCode = "400", description = "Bad Request (요청 데이터 오류)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @PostMapping("/{reservationId}")
+    @PostMapping()
     public ResponseEntity<PaymentResponseDto> createPayment(
-            @RequestHeader(value = "X-User-Id") Long userId,
-            @PathVariable Long reservationId) {
-        PaymentResponseDto response = paymentService.processPayment(reservationId, userId);
+            @RequestBody PaymentRequestDto paymentRequestDto) {
+        PaymentResponseDto response = paymentService.processPayment(
+                paymentRequestDto.getUserId(),
+                paymentRequestDto.getReservationGroupId());
         return ResponseEntity.ok(response);
-    }
-
-    @Operation(summary = "결제 취소", description = "결제 ID를 기반으로 결제를 취소")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OK"),
-            @ApiResponse(responseCode = "404", description = "Not Found (결제가 존재하지 않음)"),
-            @ApiResponse(responseCode = "500", description = "Internal Server Error")
-    })
-    @PostMapping("/cancel/{reservationId}")
-    public ResponseEntity<String> cancelPayment(
-            @PathVariable Long reservationId) {
-        paymentService.cancelPayment(reservationId);
-        return ResponseEntity.ok("취소가 완료되었습니다.");
     }
 }
 

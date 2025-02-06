@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 @Builder
 public class ReservationSuccessEvent {
-    private List<Long> seatId;
+    private List<Long> seatIdList;
     private Long userId;
 }

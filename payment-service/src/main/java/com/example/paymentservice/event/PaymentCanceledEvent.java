@@ -1,10 +1,11 @@
 package com.example.paymentservice.event;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class PaymentCancelledEvent {
-    private Long reservationId;
-    private Long seatId;
+@Builder
+public class PaymentCanceledEvent {
     private Long userId;
+    private Long amount;
 }

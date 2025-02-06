@@ -1,37 +1,37 @@
 package com.example.userservice.service;
 
 import com.example.userservice.client.WalletServiceClient;
-import com.example.userservice.dto.UserDto;
+import com.example.userservice.dto.UserRequestDto;
+import com.example.userservice.dto.UserResponseDto;
 import com.example.userservice.entity.User;
 import com.example.userservice.repository.UserRepository;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.List;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final WalletServiceClient walletServiceClient;
+    private final ModelMapper modelMapper;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(username);
-
-        if (user == null)
-            throw new UsernameNotFoundException(username + ": not found");
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getEncryptedPwd(),
                 true, true, true, true,
@@ -39,46 +39,45 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUser(UserDto userDto) {
-
-        ModelMapper mapper = new ModelMapper();
-        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        User user = mapper.map(userDto, User.class);
-        user.setEncryptedPwd(passwordEncoder.encode(userDto.getPwd()));
-
+    public UserResponseDto createUser(UserRequestDto userRequestDto) {
+        User user = User.builder()
+                .name(userRequestDto.getName())
+                .email(userRequestDto.getEmail())
+                .encryptedPwd(passwordEncoder.encode(userRequestDto.getPwd()))
+                .createdAt(LocalDateTime.now())
+                .build();
         userRepository.save(user);
+        walletServiceClient.createWallet(user.getId());
+        return modelMapper.map(user, UserResponseDto.class);
     }
 
     @Override
-    public UserDto getUserById(Long id) {
-        Optional<User> optionalUser = userRepository.findById(id);
+    public UserResponseDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        User user = optionalUser.orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        UserDto userDto = new ModelMapper().map(user, UserDto.class);
+        UserResponseDto userResponseDto = modelMapper.map(user, UserResponseDto.class);
 
         Long balance = walletServiceClient.getBalance(id);
-        userDto.setBalance(balance);
+        userResponseDto.setBalance(balance);
 
-        return userDto;
+        return userResponseDto;
     }
 
     @Override
-    public Iterable<User> getUserByAll() {
-        return userRepository.findAll();
+    public List<UserResponseDto> getUserByAll() {
+        Iterable<User> userList = userRepository.findAll();
+
+        List<UserResponseDto> userResponseDtoList = new ArrayList<>();
+        userList.forEach(v -> userResponseDtoList.add(modelMapper.map(v, UserResponseDto.class)));
+        return userResponseDtoList;
     }
 
     @Override
-    public UserDto getUserDetailsByEmail(String email) {
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            log.error("User not found by email: {}", email);
-            throw new UsernameNotFoundException(email);
-        }
+    public UserResponseDto getUserDetailsByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        ModelMapper mapper = new ModelMapper();
-        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-
-        return mapper.map(user, UserDto.class);
+        return modelMapper.map(user, UserResponseDto.class);
     }
 }
