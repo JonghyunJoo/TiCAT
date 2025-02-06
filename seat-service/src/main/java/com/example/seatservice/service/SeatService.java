@@ -9,11 +9,9 @@ public interface SeatService {
 
     SeatResponseDto getSeatById(Long seatId);
 
-    boolean validateFlight(Long flightId);
+    void handleSeatLock(Long userId, Long seatId);
 
-    boolean handleSeatReservation(Long seatId);
+    Long getAvailableSeats(Long concertScheduleId);
 
-    void extendLock(Long seatId, int additionalSeconds);
-
-    void cancelSeatReservation(Long seatId);
+    void cancelSeatLock(Long seatId);
 }

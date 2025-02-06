@@ -1,7 +1,8 @@
 package com.example.reservationservice.messagequeue;
 
+import com.example.reservationservice.event.PaymentFailedEvent;
+import com.example.reservationservice.event.PaymentSuccessEvent;
 import com.example.reservationservice.service.ReservationService;
-import com.example.reservationservice.vo.PaymentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,25 +21,25 @@ public class PaymentKafkaListener {
     @KafkaListener(topics = "payment_success_topic", groupId = "payment-service")
     public void onPaymentSuccess(String message) {
         try {
-            PaymentResponse response = objectMapper.readValue(message, PaymentResponse.class);
+            PaymentSuccessEvent event = objectMapper.readValue(message, PaymentSuccessEvent.class);
 
-            reservationService.completeReserve(response.getReservationId());
+            reservationService.completeReserve(event.getReservationGroupId());
 
-            log.info("Payment success for reservation {} and user {}", response.getReservationId(), response.getUserId());
+            log.info("Payment success for reservation {} and user {}", event.getReservationGroupId(), event.getUserId());
         } catch (Exception e) {
             log.error("Error processing payment success message: {}", e.getMessage());
         }
     }
 
     // 결제 취소 시 처리
-    @KafkaListener(topics = "payment_cancelled_topic", groupId = "payment-service")
+    @KafkaListener(topics = "payment_failed_topic", groupId = "payment-service")
     public void onPaymentCancelled(String message) {
         try {
-            PaymentResponse response = objectMapper.readValue(message, PaymentResponse.class);
+            PaymentFailedEvent event = objectMapper.readValue(message, PaymentFailedEvent.class);
 
-            reservationService.cancelReservation(response.getReservationId());
+            reservationService.cancelReservationGroup(event.getUserId(), event.getReservationGroupId());
 
-            log.info("Payment cancelled for reservation {} and user {}", response.getReservationId(), response.getUserId());
+            log.info("Payment cancelled for reservation {} and user {}", event.getReservationGroupId(), event.getUserId());
         } catch (Exception e) {
             log.error("Error processing payment cancelled message: {}", e.getMessage());
         }

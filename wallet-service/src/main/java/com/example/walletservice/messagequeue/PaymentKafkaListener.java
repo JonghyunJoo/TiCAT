@@ -1,5 +1,6 @@
 package com.example.walletservice.messagequeue;
 
+import com.example.walletservice.event.ReservationCanceledEvent;
 import com.example.walletservice.service.WalletService;
 import com.example.walletservice.vo.PaymentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,14 +32,14 @@ public class PaymentKafkaListener {
     }
 
     // 결제 취소 시 처리
-    @KafkaListener(topics = "payment_cancelled_topic", groupId = "payment-service")
+    @KafkaListener(topics = "Reservation_cancelled_topic", groupId = "payment-service")
     public void onPaymentCancelled(String message) {
         try {
-            PaymentResponse response = objectMapper.readValue(message, PaymentResponse.class);
+            ReservationCanceledEvent reservationCanceledEvent = objectMapper.readValue(message, ReservationCanceledEvent.class);
 
-            walletService.refundBalance(response.getUserId(), response.getAmount());
+            walletService.refundBalance(reservationCanceledEvent.getUserId(), reservationCanceledEvent.getAmount());
 
-            log.info("Payment cancelled for reservation {} and user {}", response.getReservationId(), response.getUserId());
+            log.info("Payment cancelled for user {}", reservationCanceledEvent.getUserId());
         } catch (Exception e) {
             log.error("Error processing payment cancelled message: {}", e.getMessage());
         }

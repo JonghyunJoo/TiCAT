@@ -1,19 +1,16 @@
 package com.example.seatservice.service;
 
-import com.example.seatservice.client.FlightClient;
 import com.example.seatservice.dto.SeatResponseDto;
 import com.example.seatservice.entity.Seat;
 import com.example.seatservice.entity.SeatStatus;
 import com.example.seatservice.exception.CustomException;
 import com.example.seatservice.exception.ErrorCode;
 import com.example.seatservice.repository.SeatRepository;
-import com.example.seatservice.vo.FlightResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,19 +23,13 @@ import java.util.concurrent.TimeUnit;
 public class SeatServiceImpl implements SeatService {
     private final RedissonClient redissonClient;
     private final SeatRepository seatRepository;
-    private final FlightClient flightClient;
     private final ModelMapper modelMapper;
 
-    @Cacheable(value = "seatCache", key = "#flightId")
-    public List<SeatResponseDto> getSeatingChart(Long flightId) {
+    public List<SeatResponseDto> getSeatingChart(Long concertScheduleId) {
         try {
-            if (!validateFlight(flightId)) {
-                throw new CustomException(ErrorCode.NOT_FOUND_FLIGHT);
-            }
-
-            List<Seat> seats = seatRepository.findAllByFlightId(flightId);
+            List<Seat> seats = seatRepository.findAllByConcertScheduleId(concertScheduleId);
             if (seats.isEmpty()) {
-                log.warn("No seats found for flightId: {}", flightId);
+                log.warn("No seats found for concertScheduleId: {}", concertScheduleId);
                 throw new CustomException(ErrorCode.NOT_FOUND_SEAT);
             }
 
@@ -60,76 +51,58 @@ public class SeatServiceImpl implements SeatService {
     public SeatResponseDto getSeatById(Long seatId) {
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_SEAT));
-        return modelMapper.map(seat, SeatResponseDto.class);  // 변환
-    }
-
-    public boolean validateFlight(Long flightId) {
-        try {
-            FlightResponse flight = flightClient.getFlight(flightId);
-            return flight != null;
-        } catch (Exception ex) {
-            log.error("Error while validating flight with id {}: {}", flightId, ex.getMessage());
-            return false;
-        }
+        return modelMapper.map(seat, SeatResponseDto.class);
     }
 
     // 좌석 예약 처리
-    public boolean handleSeatReservation(Long seatId) {
-        // 락 키 설정
+    public void handleSeatLock(Long userId, Long seatId) {
         String lockKey = "seat-lock:" + seatId;
         RLock lock = redissonClient.getLock(lockKey);
 
         try {
-            // 락을 걸고 일정 시간동안 대기
             if (lock.tryLock(1, TimeUnit.SECONDS)) {
                 Seat seat = seatRepository.findById(seatId)
-                        .orElseThrow(() -> new IllegalArgumentException("Seat not found"));
+                        .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_SEAT));
 
                 if (seat.getSeatStatus() == SeatStatus.AVAILABLE) {
-                    seat.updateStatus(SeatStatus.LOCKED);
+                    seat.setSeatStatus(SeatStatus.LOCKED);
+                    seat.setUserId(userId);
                     seatRepository.save(seat);
-                    log.info("Seat {} successfully locked", seat.getId());
+                    log.info("Seat {} successfully locked by user {}", seatId, userId);
+                } else if (seat.getSeatStatus() == SeatStatus.LOCKED) {
+                    if (seat.getUserId().equals(userId)) {
+                        seat.setSeatStatus(SeatStatus.AVAILABLE);
+                        seat.setUserId(null);
+                        seatRepository.save(seat);
+                        log.info("Seat {} successfully unlocked by user {}", seatId, userId);
+                    } else {
+                        log.warn("Seat {} is reserved", seatId);
+                        throw new CustomException(ErrorCode.UNAVAILABLE_SEAT);
+                    }
                 } else {
-                    log.warn("Seat {} is not available for locking", seat.getId());
-                    throw new CustomException(ErrorCode.UNAVAILABLE_SEAT);
+                    log.warn("Seat {} is not available or locked", seatId);
+                    throw new CustomException(ErrorCode.ALREADY_RESERVED_SEAT);
                 }
             } else {
                 log.warn("Failed to acquire lock for seat {}", seatId);
-                throw new CustomException(ErrorCode.UNAVAILABLE_SEAT);
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
         } catch (InterruptedException e) {
             log.error("Error while acquiring lock for seat {}: {}", seatId, e.getMessage());
-            Thread.currentThread().interrupt();
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         } finally {
-            log.info("Seat locked check : {}", lock.isLocked());
-        }
-        return true;
-    }
-
-    public void extendLock(Long seatId, int additionalSeconds) {
-        Seat seat = seatRepository.findById(seatId)
-                .orElseThrow(() -> new IllegalArgumentException("Seat not found"));
-
-        String lockKey = "seat-lock:" + seat.getId();
-        RLock lock = redissonClient.getLock(lockKey);
-
-        try {
-            if (lock.isLocked()) {
-                lock.lock(1, TimeUnit.DAYS);
-                log.info("Lock extended for seat {}", seatId);
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
             }
-        } catch (Exception e) {
-            log.error("Error extending lock for seat {}: {}", seatId, e.getMessage());
         }
     }
 
-    public void cancelSeatReservation(Long seatId) {
-        RLock lock = redissonClient.getLock("seat-lock:" + seatId);
-        if (lock.isLocked() && lock.isHeldByCurrentThread()) {
-            lock.unlock();
-            System.out.println("락 해제 성공: " + seatId);
-        }
+    public Long getAvailableSeats(Long concertScheduleId) {
+        return seatRepository.countByConcertScheduleIdAndSeatStatus(
+                concertScheduleId, SeatStatus.AVAILABLE);
+    }
 
+    public void cancelSeatLock(Long seatId) {
         Seat seat = seatRepository.findById(seatId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_SEAT));
         seat.setSeatStatus(SeatStatus.AVAILABLE);

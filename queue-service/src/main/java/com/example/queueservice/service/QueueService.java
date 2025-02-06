@@ -1,10 +1,11 @@
 package com.example.queueservice.service;
 
-import com.example.queueservice.dto.QueueStatusResponse;
+import com.example.queueservice.dto.QueueStatusResponseDto;
 
 public interface QueueService {
-    QueueStatusResponse addToQueue(String userId, String flightId);
-    QueueStatusResponse getQueueStatus(String userId, String flightId);
+    QueueStatusResponseDto addToQueue(Long userId, Long concertScheduleId);
+    QueueStatusResponseDto getQueueStatus(Long userId, Long concertScheduleId);
+    void deleteTokens(Long userId);
 }
 
 

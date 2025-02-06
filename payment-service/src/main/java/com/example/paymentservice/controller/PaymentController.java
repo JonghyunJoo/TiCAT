@@ -38,11 +38,11 @@ public class PaymentController {
             @ApiResponse(responseCode = "404", description = "Not Found (결제가 존재하지 않음)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @PostMapping("/cancel/{paymentId}")
-    public ResponseEntity<Void> cancelPayment(
-            @PathVariable Long paymentId) {
-        paymentService.cancelPayment(paymentId);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/cancel/{reservationId}")
+    public ResponseEntity<String> cancelPayment(
+            @PathVariable Long reservationId) {
+        paymentService.cancelPayment(reservationId);
+        return ResponseEntity.ok("취소가 완료되었습니다.");
     }
 }
 

@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class Reservation {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,6 +25,10 @@ public class Reservation {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "reservationGroup_id")
+    private ReservationGroup reservationGroup;
 
     public void confirmReservation() {
         this.reservationStatus = ReservationStatus.RESERVED;

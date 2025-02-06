@@ -1,0 +1,149 @@
+services:
+  redis:
+    container_name: redis-service
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  kafka:
+    container_name: kafka-service
+    image: bitnami/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      # KRaft settings
+      - KAFKA_CFG_BROKER_ID=0
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_KRAFT_CLUSTER_ID=HsDBs9l6UUmQq7Y5E6bNlw
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      # Listeners
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    volumes:
+      - ./kafka-data:/var/lib/kafka/data
+
+  rabbitmq:
+    container_name: rabbitmq-service
+    image: rabbitmq:management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+
+#  config-service:
+#    image: jonghyunjoo1235/config-service
+#    ports:
+#      - "8888:8888"
+#    networks:
+#      my-network:
+#
+#  discovery-service:
+#    image: jonghyunjoo1235/service-discovery
+#    ports:
+#      - "8761:8761"
+#    networks:
+#      my-network:
+#
+#  user-service:
+#    image: jonghyunjoo1235/user-service
+#    ports:
+#      - "10000:10000"
+#    environment:
+#      spring.cloud.config.uri: http://config-service:8888
+#      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+#      logging.file: /api-logs/users-ws.log
+#    depends_on:
+#      - config-service
+#    networks:
+#      my-network:
+#
+#  flight-service:
+#    image: jonghyunjoo1235/flight-service
+#    ports:
+#      - "11000:11000"
+#    environment:
+#      spring.cloud.config.uri: http://config-service:8888
+#      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+#      logging.file: /api-logs/flight-ws.log
+#    depends_on:
+#      - config-service
+#    networks:
+#      my-network:
+#
+#  seat-service:
+#    image: jonghyunjoo1235/seat-service
+#    ports:
+#      - "12000:12000"
+#    environment:
+#      spring.cloud.config.uri: http://config-service:8888
+#      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+#      logging.file: /api-logs/seat-ws.log
+#    depends_on:
+#      - config-service
+#    networks:
+#      my-network:
+#
+#  queue-service:
+#    image: jonghyunjoo1235/queue-service
+#    ports:
+#      - "13000:13000"
+#    environment:
+#      spring.cloud.config.uri: http://config-service:8888
+#      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+#      logging.file: /api-logs/queue-ws.log
+#    depends_on:
+#      - config-service
+#    networks:
+#      my-network:
+#
+#  reservation-service:
+#    image: jonghyunjoo1235/reservation-service
+#    ports:
+#      - "14000:14000"
+#    environment:
+#      spring.cloud.config.uri: http://config-service:8888
+#      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+#      logging.file: /api-logs/reservation-ws.log
+#    depends_on:
+#      - config-service
+#    networks:
+#      my-network:
+#
+#  payment-service:
+#    image: jonghyunjoo1235/payment-service
+#    ports:
+#      - "15000:15000"
+#    environment:
+#      spring.cloud.config.uri: http://config-service:8888
+#      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+#      logging.file: /api-logs/payment-ws.log
+#    depends_on:
+#      - config-service
+#    networks:
+#      my-network:
+#
+#  wallet-service:
+#    image: jonghyunjoo1235/wallet-service
+#    ports:
+#      - "16000:16000"
+#    environment:
+#      spring.cloud.config.uri: http://config-service:8888
+#      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+#      logging.file: /api-logs/users-ws.log
+#    depends_on:
+#      - config-service
+#    networks:
+#      my-network:
+#
+#networks:
+#  my-network:
+#    external: true
