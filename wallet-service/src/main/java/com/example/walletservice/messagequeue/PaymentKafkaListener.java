@@ -1,5 +1,6 @@
 package com.example.walletservice.messagequeue;
 
+import com.example.walletservice.entity.Wallet;
 import com.example.walletservice.event.PaymentCanceledEvent;
 import com.example.walletservice.event.PaymentSuccessEvent;
 import com.example.walletservice.service.WalletService;
@@ -23,9 +24,12 @@ public class PaymentKafkaListener {
         try {
             PaymentSuccessEvent paymentSuccessEvent = objectMapper.readValue(message, PaymentSuccessEvent.class);
 
-            walletService.deductBalance(paymentSuccessEvent.getUserId(), paymentSuccessEvent.getAmount());
+            Wallet wallet = walletService.deductBalance(
+                    paymentSuccessEvent.getUserId(),
+                    paymentSuccessEvent.getAmount());
 
-            log.info("Payment success for user {}, {}", paymentSuccessEvent.getUserId(), paymentSuccessEvent.getAmount());
+            log.info("Payment success for user {}, {}, After : {}",
+                    wallet.getUserId(), paymentSuccessEvent.getAmount(), wallet.getBalance());
         } catch (Exception e) {
             log.error("Error processing payment success message: {}", e.getMessage());
         }
@@ -37,9 +41,12 @@ public class PaymentKafkaListener {
         try {
             PaymentCanceledEvent paymentCanceledEvent = objectMapper.readValue(message, PaymentCanceledEvent.class);
 
-            walletService.refundBalance(paymentCanceledEvent.getUserId(), paymentCanceledEvent.getAmount());
+            Wallet wallet = walletService.refundBalance(
+                    paymentCanceledEvent.getUserId(),
+                    paymentCanceledEvent.getAmount());
 
-            log.info("Payment canceled for user {}", paymentCanceledEvent.getUserId());
+            log.info("Payment canceled for user {}, {}, After : {}",
+                    wallet.getUserId(), paymentCanceledEvent.getAmount(), wallet.getBalance());
         } catch (Exception e) {
             log.error("Error processing payment canceled message: {}", e.getMessage());
         }

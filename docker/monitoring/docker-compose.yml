@@ -11,6 +11,8 @@ services:
       - ./grafana-dashboard:/dashboard
     depends_on:
       - prometheus
+    networks:
+      - my-network
 
   prometheus:
     container_name: prometheus
@@ -23,6 +25,8 @@ services:
 #      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    networks:
+      - my-network
 
   k6:
     container_name: k6
@@ -37,7 +41,12 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - prometheus
+    networks:
+      - my-network
 
+networks:
+  my-network:
+    external: true
 #  zipkin:
 #    container_name: zipkin-service
 #    image: openzipkin/zipkin

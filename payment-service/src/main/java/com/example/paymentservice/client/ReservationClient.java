@@ -2,7 +2,6 @@ package com.example.paymentservice.client;
 
 import com.example.paymentservice.exception.CustomException;
 import com.example.paymentservice.exception.ErrorCode;
-import com.example.paymentservice.vo.ReservationGroupResponse;
 import com.example.paymentservice.vo.ReservationResponse;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.cloud.openfeign.FeignClient;

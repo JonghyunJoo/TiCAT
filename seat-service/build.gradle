@@ -20,10 +20,22 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.redisson:redisson-spring-boot-starter:3.40.2'
     compileOnly 'org.projectlombok:lombok'
-    runtimeOnly 'com.h2database:h2'
+    implementation 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.kafka:spring-kafka-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+String jarName = "seat-service.jar"
+
+tasks.named("bootJar") {
+    bootJar.getArchiveFileName().set(jarName)
+
+    bootJar.doLast(task -> {
+        copy(copySpec -> {
+            copySpec.from("build/libs/" + jarName)
+            copySpec.into("../build/libs")
+        })
+    })
+}

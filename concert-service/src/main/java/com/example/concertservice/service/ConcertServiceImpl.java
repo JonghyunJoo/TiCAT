@@ -26,7 +26,7 @@ import java.time.format.DateTimeParseException;
 @Service
 @Slf4j
 @AllArgsConstructor
-public class ConcertServiceImpl implements ConcertService{
+public class ConcertServiceImpl implements ConcertService {
     private final ConcertRepository concertRepository;
     private final ModelMapper modelMapper;
 
@@ -42,37 +42,34 @@ public class ConcertServiceImpl implements ConcertService{
     @Override
     @Cacheable(
             value = "concertCache",
-            key = "{#concertRequestDto.title, #concertRequestDto.searchStartDate, #concertRequestDto.searchEndDate}",
+            key = "{#title ?: 'ALL', #startDateTime?: 'ALL', #endDateTime?: 'ALL'}",
             unless = "#result == null || #result.content.isEmpty()"
     )
-    public ConcertPageDto<ConcertResponseDto> getConcertsByConditions(ConcertSearchRequestDto concertRequestDto) {
-        LocalDateTime startDateTime;
-        LocalDateTime endDateTime;
+    public ConcertPageDto<ConcertResponseDto> getConcertsByConditions(
+            String title,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime,
+            int page,
+            int size,
+            String orderBy,
+            String orderDirection) {
 
         try {
-            Sort sort = Sort.by(concertRequestDto.getOrderBy());
-            if (concertRequestDto.getOrderDirection().equalsIgnoreCase("DESC")) {
+            Sort sort = Sort.by(orderBy);
+            if (orderDirection.equalsIgnoreCase("DESC")) {
                 sort = sort.descending();
             } else {
                 sort = sort.ascending();
             }
 
-            Pageable pageable = PageRequest.of(concertRequestDto.getPage(), concertRequestDto.getSize(), sort);
+            Pageable pageable = PageRequest.of(page, size, sort);
 
             Specification<Concert> spec = (root, query, criteriaBuilder) -> null;
 
-            if (concertRequestDto.getTitle() != null) {
-                spec = spec.and(ConcertSpecification.likeTitle(concertRequestDto.getTitle()));
+            if (title != null) {
+                spec = spec.and(ConcertSpecification.likeTitle(title));
             }
-
-
-            if (concertRequestDto.getSearchStartDate() != null) {
-                startDateTime = startTimeParser(concertRequestDto.getSearchStartDate());
-                if (concertRequestDto.getSearchEndDate() != null) {
-                    endDateTime = endTimeParser(concertRequestDto.getSearchEndDate());
-                } else {
-                    endDateTime = startDateTime.plusMonths(1);
-                }
+            if (startDateTime != null && endDateTime != null) {
                 spec = spec.and(ConcertSpecification.betweenStartDateAndEndDate(startDateTime, endDateTime));
             }
 
@@ -103,26 +100,26 @@ public class ConcertServiceImpl implements ConcertService{
         return modelMapper.map(concert, ConcertResponseDto.class);
     }
 
-    private LocalDateTime startTimeParser(String startDate) {
+    public LocalDateTime startTimeParser(String searchStartDate) {
         try {
-            LocalDate parsedStartDate = LocalDate.parse(startDate);
+            LocalDate parsedStartDate = LocalDate.parse(searchStartDate);
             return parsedStartDate.atStartOfDay();
         } catch (DateTimeParseException e) {
             try {
-                return LocalDateTime.parse(startDate);
+                return LocalDateTime.parse(searchStartDate);
             } catch (DateTimeParseException ex) {
                 throw new CustomException(ErrorCode.INVALID_REQUEST);
             }
         }
     }
 
-    private LocalDateTime endTimeParser(String endDate) {
+    public LocalDateTime endTimeParser(String searchEndDate) {
         try {
-            LocalDate parsedEndDate = LocalDate.parse(endDate);
+            LocalDate parsedEndDate = LocalDate.parse(searchEndDate);
             return parsedEndDate.atTime(LocalTime.MAX);
         } catch (DateTimeParseException e) {
             try {
-                return LocalDateTime.parse(endDate);
+                return LocalDateTime.parse(searchEndDate);
             } catch (DateTimeParseException ex) {
                 throw new CustomException(ErrorCode.INVALID_REQUEST);
             }

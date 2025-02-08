@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "wallets", indexes = @Index(columnList = "user_id"))
+@Table(name = "wallets", indexes = @Index(name="idx_user_id", columnList = "user_id"))
 public class Wallet {
 
     @Id

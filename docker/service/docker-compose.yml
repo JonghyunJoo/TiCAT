@@ -1,0 +1,164 @@
+services:
+  redis:
+    container_name: redis-service
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      my-network:
+
+  mysql:
+    image: mysql:8.0
+    container_name: msa-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: msa_user
+      MYSQL_PASSWORD: msa_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      my-network:
+
+  config-service:
+    image: jonghyunjoo1235/config-service:1.0
+    container_name: config-service
+    ports:
+      - "8888:8888"
+    networks:
+      my-network:
+
+  discovery-service:
+    image: jonghyunjoo1235/service-discovery:1.0
+    container_name: service-discovery
+    ports:
+      - "8761:8761"
+    networks:
+      my-network:
+
+  apigateway-service:
+    image: jonghyunjoo1235/apigateway-service:1.0
+    container_name: apigateway-service
+    ports:
+      - "8000:8000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/users-ws.log
+    depends_on:
+      - config-service
+    networks:
+      my-network:
+
+  user-service:
+    image: jonghyunjoo1235/user-service:1.0
+    container_name: user-service
+    ports:
+      - "10000:10000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/users-ws.log
+    depends_on:
+      - config-service
+    networks:
+      my-network:
+
+  concert-service:
+    image: jonghyunjoo1235/concert-service:1.0
+    container_name: concert-service
+    ports:
+      - "11000:11000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/concert-ws.log
+    depends_on:
+      - config-service
+    networks:
+      my-network:
+
+  seat-service:
+    image: jonghyunjoo1235/seat-service:1.0
+    container_name: seat-service
+    ports:
+      - "12000:12000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/seat-ws.log
+    depends_on:
+      - config-service
+    networks:
+      - my-network
+      - kafka_kafka_network
+
+  queue-service:
+    image: jonghyunjoo1235/queue-service:1.0
+    container_name: queue-service
+    ports:
+      - "13000:13000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/queue-ws.log
+    depends_on:
+      - config-service
+    networks:
+      my-network:
+
+  reservation-service:
+    image: jonghyunjoo1235/reservation-service:1.0
+    container_name: reservation-service
+    ports:
+      - "14000:14000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/reservation-ws.log
+    depends_on:
+      - config-service
+    networks:
+      - my-network
+      - kafka_kafka_network
+  payment-service:
+    image: jonghyunjoo1235/payment-service:1.0
+    container_name: payment-service
+    ports:
+      - "15000:15000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/payment-ws.log
+    depends_on:
+      - config-service
+    networks:
+     - my-network
+     - kafka_kafka_network
+
+  wallet-service:
+    image: jonghyunjoo1235/wallet-service:1.0
+    container_name: wallet-service
+    ports:
+      - "16000:16000"
+    environment:
+      spring.cloud.config.uri: http://config-service:8888
+      eureka.client.serviceUrl.defaultZone: http://discovery-service:8761/eureka/
+      logging.file: /api-logs/wallet-ws.log
+    depends_on:
+      - config-service
+    networks:
+      - kafka_kafka_network
+      - my-network
+
+networks:
+  my-network:
+    external: true
+  kafka_kafka_network:
+    external: true
+
+volumes:
+  mysql_data:

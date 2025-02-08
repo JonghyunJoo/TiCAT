@@ -1,6 +1,6 @@
 package com.example.seatservice.service;
 
-import com.example.seatservice.dto.SeatRequestDto;
+import com.example.seatservice.dto.SeatCreateRequestDto;
 import com.example.seatservice.dto.SeatResponseDto;
 import com.example.seatservice.entity.Seat;
 import com.example.seatservice.entity.SeatStatus;
@@ -30,8 +30,8 @@ public class SeatServiceImpl implements SeatService {
 
     @Override
     @Transactional
-    public List<SeatResponseDto> createSeats(List<SeatRequestDto> seatRequestDtoList) {
-        List<Seat> seats = seatRequestDtoList.stream()
+    public List<SeatResponseDto> createSeats(List<SeatCreateRequestDto> seatCreateRequestDtoList) {
+        List<Seat> seats = seatCreateRequestDtoList.stream()
                 .map(dto -> modelMapper.map(dto, Seat.class))
                 .collect(Collectors.toList());
 
@@ -82,7 +82,8 @@ public class SeatServiceImpl implements SeatService {
 
         if (seat.getSeatStatus() == SeatStatus.AVAILABLE) {
             lockSeat(userId, seatId);
-        } else if (seat.getSeatStatus() == SeatStatus.LOCKED) {
+        }
+        else if (seat.getSeatStatus() == SeatStatus.LOCKED) {
             if (seat.getUserId().equals(userId)) {
                 cancelSeatLock(seatId);
             } else {

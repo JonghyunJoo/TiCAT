@@ -1,3 +1,16 @@
 dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
 }
+
+String jarName = "service-discovery.jar"
+
+tasks.named("bootJar") {
+    bootJar.getArchiveFileName().set(jarName)
+
+    bootJar.doLast(task -> {
+        copy(copySpec -> {
+            copySpec.from("build/libs/" + jarName)
+            copySpec.into("../build/libs")
+        })
+    })
+}

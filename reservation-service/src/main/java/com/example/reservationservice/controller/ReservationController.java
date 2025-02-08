@@ -28,7 +28,6 @@ public class ReservationController {
     })
     @PostMapping()
     public ResponseEntity<ReservationGroupResponseDto> createReservation(
-
             @RequestBody ReservationRequestDto reservationRequestDto) {
         ReservationGroupResponseDto groupResponseDto
                 = reservationService.createReservation(

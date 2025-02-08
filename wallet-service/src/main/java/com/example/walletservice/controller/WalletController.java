@@ -2,12 +2,14 @@ package com.example.walletservice.controller;
 
 import com.example.walletservice.dto.TransactionHistoryRequestDto;
 import com.example.walletservice.dto.TransactionHistoryResponseDto;
+import com.example.walletservice.entity.Wallet;
 import com.example.walletservice.service.WalletService;
 import com.example.walletservice.dto.WalletResponseDto;
 import com.example.walletservice.dto.WalletRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,7 @@ import java.util.List;
 public class    WalletController {
 
     private final WalletService walletService;
+    private final ModelMapper modelMapper;
 
     @Operation(summary = "지갑 생성", description = "사용자의 새로운 지갑을 생성합니다.")
     @PostMapping("/{userId}")
@@ -32,15 +35,15 @@ public class    WalletController {
     @Operation(summary = "잔액 조회", description = "사용자의 현재 잔액을 조회합니다.")
     @GetMapping("/{userId}")
     public ResponseEntity<Long> getBalance(@PathVariable Long userId) {
-        Long balance = walletService.getBalance(userId);
+        Long balance = walletService.getWallet(userId).getBalance();
         return ResponseEntity.ok(balance);
     }
 
     @Operation(summary = "잔액 충전", description = "사용자의 지갑 잔액을 충전합니다.")
     @PutMapping()
-    public ResponseEntity<String> chargeWallet(@RequestBody WalletRequestDto walletRequestDto) {
-        walletService.chargeWallet(walletRequestDto.getUserId(), walletRequestDto.getAmount());
-        return ResponseEntity.ok("Wallet charged successfully.");
+    public ResponseEntity<WalletResponseDto> chargeWallet(@RequestBody WalletRequestDto walletRequestDto) {
+        Wallet wallet = walletService.chargeWallet(walletRequestDto.getUserId(), walletRequestDto.getAmount());
+        return ResponseEntity.ok(modelMapper.map(wallet, WalletResponseDto.class));
     }
 
     @Operation(summary = "거래 내역 조회", description = "사용자의 거래 내역을 조회합니다.")

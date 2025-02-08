@@ -23,3 +23,15 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'io.projectreactor:reactor-test'
 }
+String jarName = "apigateway-service.jar"
+
+tasks.named("bootJar") {
+	bootJar.getArchiveFileName().set(jarName)
+
+	bootJar.doLast(task -> {
+		copy(copySpec -> {
+			copySpec.from("build/libs/" + jarName)
+			copySpec.into("../build/libs")
+		})
+	})
+}

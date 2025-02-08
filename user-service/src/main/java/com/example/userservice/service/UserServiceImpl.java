@@ -6,7 +6,6 @@ import com.example.userservice.dto.UserResponseDto;
 import com.example.userservice.entity.User;
 import com.example.userservice.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UserDetails;

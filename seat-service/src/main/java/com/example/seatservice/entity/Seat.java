@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "seats", indexes ={
-        @Index(columnList = "concert_schedule_id"),
+        @Index(name = "idx_concert_schedule_id", columnList = "concert_schedule_id"),
         @Index(name = "idx_status_cs_id", columnList = "seat_status, concert_schedule_id")})
 public class Seat {
     @Id
@@ -23,7 +23,6 @@ public class Seat {
     private SeatGrade seatGrade;
     @Enumerated(EnumType.STRING)
     private SeatStatus seatStatus;
-    private int rowNumber;
-    private int columnNumber;
-
+    private int seatRow;
+    private int seatColumn;
 }

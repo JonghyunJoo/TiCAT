@@ -25,9 +25,11 @@ public class QueueController {
             @ApiResponse(responseCode = "400", description = "Bad Request (요청 데이터 오류)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<QueueResponseDto> createQueue(@RequestBody QueueRequestDto queueRequestDto) {
-        QueueResponseDto response = queueService.addToQueue(queueRequestDto.getUserId(), queueRequestDto.getConcertScheduleId());
+        QueueResponseDto response = queueService.addToQueue(
+                queueRequestDto.getUserId(),
+                queueRequestDto.getConcertScheduleId());
         return ResponseEntity.ok(response);
     }
 
@@ -37,15 +39,14 @@ public class QueueController {
             @ApiResponse(responseCode = "404", description = "Not Found (대기열이 존재하지 않음)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<QueueResponseDto> getQueueStatus(
-            @RequestParam Long userId,
-            @RequestParam Long concertScheduleId) {
+            @RequestParam Long userId, @RequestParam Long concertScheduleId) {
         QueueResponseDto response = queueService.getQueueStatus(userId, concertScheduleId);
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "대기열 삭제", description = "대기열 ID를 기반으로 상태를 조회합니다.")
+    @Operation(summary = "대기열 삭제", description = "대기열을 삭제합니다")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "OK"),
             @ApiResponse(responseCode = "404", description = "Not Found (대기열이 존재하지 않음)"),

@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -31,7 +32,7 @@ public class ConcertController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<ConcertResponseDto> createConcert(@RequestBody ConcertRequestDto concertRequestDto) {
         ConcertResponseDto response = concertService.createConcert(concertRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -43,12 +44,29 @@ public class ConcertController {
             @ApiResponse(responseCode = "404", description = "조건에 맞는 콘서트가 없음"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<ConcertPageDto<ConcertResponseDto>> getConcertsByConditions(
-            @RequestBody ConcertSearchRequestDto concertRequestDto) {
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String searchStartDate,
+            @RequestParam(required = false) String searchEndDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "searchStartDate") String orderBy,
+            @RequestParam(defaultValue = "ASC") String orderDirection
+    ) {
+        LocalDateTime startDateTime = null;
+        LocalDateTime endDateTime = null;
 
-        ConcertPageDto<ConcertResponseDto> concertPage = concertService.getConcertsByConditions(concertRequestDto);
-        return ResponseEntity.ok(concertPage);
+        if (searchStartDate != null) {
+            startDateTime = concertService.startTimeParser(searchStartDate);
+            if (searchEndDate != null) {
+                endDateTime = concertService.endTimeParser(searchEndDate);
+            } else {
+                endDateTime = startDateTime.plusMonths(1);
+            }
+        }
+        return ResponseEntity.ok(concertService.getConcertsByConditions(
+                title, startDateTime, endDateTime, page, size, orderBy, orderDirection));
     }
 
     @Operation(summary = "콘서트 정보 조회", description = "ID를 기준으로 콘서트 정보를 조회합니다.")

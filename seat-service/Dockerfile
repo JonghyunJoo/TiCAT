@@ -1,4 +1,4 @@
 FROM openjdk:21-ea-slim
 VOLUME /tmp
-COPY build/libs/seat-service-1.0.jar SeatService.jar
+COPY build/libs/seat-service.jar SeatService.jar
 ENTRYPOINT ["java", "-jar", "SeatService.jar"]

@@ -2,8 +2,9 @@ package com.example.seatservice.controller;
 
 import java.util.List;
 
-import com.example.seatservice.dto.SeatRequestDto;
+import com.example.seatservice.dto.SeatCreateRequestDto;
 import com.example.seatservice.dto.SeatResponseDto;
+import com.example.seatservice.dto.SeatSelectRequestDto;
 import com.example.seatservice.service.SeatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -28,8 +29,8 @@ public class SeatController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @PostMapping()
-    public ResponseEntity<List<SeatResponseDto>> saveSeats(@RequestBody List<SeatRequestDto> seatRequestDtos) {
-        List<SeatResponseDto> savedSeats = seatService.createSeats(seatRequestDtos);
+    public ResponseEntity<List<SeatResponseDto>> saveSeats(@RequestBody List<SeatCreateRequestDto> seatCreateRequestDtoList) {
+        List<SeatResponseDto> savedSeats = seatService.createSeats(seatCreateRequestDtoList);
         return ResponseEntity.ok(savedSeats);
     }
 
@@ -75,11 +76,9 @@ public class SeatController {
             @ApiResponse(responseCode = "409", description = "Conflict (좌석 이미 잠금됨)"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error (잠금 작업 실패)")
     })
-    @PutMapping("/selectSeat/{seatId}")
-    public ResponseEntity<Long> selectSeat(@RequestHeader("X-User-Id") Long userId, @PathVariable Long seatId) {
-        seatService.handleSeatLock(userId, seatId);
-        return ResponseEntity.ok(seatId);
+    @PutMapping("/selectSeat")
+    public ResponseEntity<Long> selectSeat(@RequestBody SeatSelectRequestDto seatSelectRequestDto) {
+        seatService.handleSeatLock(seatSelectRequestDto.getUserId(), seatSelectRequestDto.getSeatId());
+        return ResponseEntity.ok(seatSelectRequestDto.getSeatId());
     }
-
-
 }

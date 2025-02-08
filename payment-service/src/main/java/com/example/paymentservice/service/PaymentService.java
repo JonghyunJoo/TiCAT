@@ -1,6 +1,5 @@
 package com.example.paymentservice.service;
 
-import com.example.paymentservice.dto.PaymentRequestDto;
 import com.example.paymentservice.dto.PaymentResponseDto;
 
 import java.util.List;

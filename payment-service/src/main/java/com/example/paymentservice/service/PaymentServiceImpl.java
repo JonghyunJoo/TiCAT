@@ -1,6 +1,5 @@
 package com.example.paymentservice.service;
 
-import com.example.paymentservice.dto.PaymentRequestDto;
 import com.example.paymentservice.dto.PaymentResponseDto;
 import com.example.paymentservice.entity.Payment;
 import com.example.paymentservice.entity.PaymentStatus;
@@ -77,10 +76,6 @@ public class PaymentServiceImpl implements PaymentService {
         long totalAmount = reservations.stream()
                 .mapToLong(ReservationResponse::getPrice)
                 .sum();
-
-        List<Long> seatIds = reservations.stream()
-                .map(ReservationResponse::getSeatId)
-                .toList();
 
         PaymentCanceledEvent canceledEvent = PaymentCanceledEvent.builder()
                 .userId(userId)

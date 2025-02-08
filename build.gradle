@@ -7,7 +7,7 @@ plugins {
 }
 
 ext {
-    set('springCloudVersion', "2023.0.0") // Spring Cloud 버전 관리
+    set('springCloudVersion', "2023.0.0")
 }
 
 repositories {
