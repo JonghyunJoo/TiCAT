@@ -215,6 +215,7 @@ export default function () {
 - 무작위로 선택된 사용자 ID를 사용하여 API를 호출하고, 응답 상태를 확인한다.
 
 #### 4.1.1 결과
+- Load Test
 ```
       ✓ waiting check
  
@@ -240,6 +241,10 @@ export default function () {
  running (1m00.9s), 0000/1000 VUs, 45037 complete and 0 interrupted iterations
  load_test ✓ [ 100% ] 0000/1000 VUs  1m0s
 ```
+![Image](https://github.com/user-attachments/assets/b4b8e35a-b732-433e-bb6c-d99a8d2fa1c8)
+
+- Peak Test
+
 ```
       ✓ waiting check
  
@@ -266,6 +271,8 @@ export default function () {
  running (1m12.2s), 0000/2000 VUs, 78773 complete and 0 interrupted iterations
  peak_test ✓ [ 100% ] 0000/2000 VUs  1m10s  3996.96 iters/s
 ```
+![Image](https://github.com/user-attachments/assets/af85eb9f-e89c-4d3d-852c-6768eb02bf53)
+
 #### 4.1.2 분석
 - Load_Test
   - 성공률:
@@ -385,6 +392,7 @@ export default function () {
  running (1m02.0s), 0000/1000 VUs, 18529 complete and 0 interrupted iterations
  load_test ✓ [ 100% ] 0000/1000 VUs  1m0s
 ```
+![Image](https://github.com/user-attachments/assets/f0652ad8-e276-442a-a0ff-826fcc4109a0)
 - Peak Test
 ```
       █ Step 1: create queue
@@ -420,6 +428,7 @@ export default function () {
  running (1m14.5s), 0000/2000 VUs, 22034 complete and 0 interrupted iterations
  peak_test ✓ [ 100% ] 0000/2000 VUs  1m10s  3997.79 iters/s
 ```
+![Image](https://github.com/user-attachments/assets/6512098c-222f-4728-9dbc-71d369c7a037)
 #### 4.2.2 분석
 - Load_Test
   - 성공률:
@@ -606,6 +615,7 @@ running (1m04.6s), 0000/1000 VUs, 5365 complete and 0 interrupted iterations
 load_test ✓ [ 100% ] 0000/1000 VUs  1m0s
 time="2025-02-08T15:06:41Z" level=error msg="thresholds on metrics 'http_req_duration' have been crossed"
 ```
+![Image](https://github.com/user-attachments/assets/ee79ee06-36d1-4cff-8d1c-5216ec2f75ae)
 #### 4.3.2 분석
 - 성공률:
   - 모든 요청이 성공적으로 처리되었다 (100% 성공률). -> 서비스 안정성은 양호

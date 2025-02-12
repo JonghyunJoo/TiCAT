@@ -69,8 +69,8 @@ sequenceDiagram
     APIGateway->>SeatService: 좌석 선택 요청 전달
     SeatService->>SeatService: 좌석 상태 확인
     alt 좌석 상태가 AVAILABLE인 경우
-    SeatService->>SeatService: 좌석 잠금 (LOCKED 상태 변경)
-    seatService-->>APIGateway: 좌석 잠금 응답
+        SeatService->>SeatService: 좌석 잠금 (LOCKED 상태 변경)
+        seatService-->>APIGateway: 좌석 잠금 응답
     else 좌석 상태가 AVAILABLE이 아닌 경우
         alt 좌석 상태가 LOCKED이면서 요청한 userId와 조회한 Seat의 userId가 같은 경우
             SeatService->>SeatService: 좌석 잠금 해제 (AVAILABLE 상태 변경)
@@ -90,7 +90,6 @@ sequenceDiagram
     SeatService->>SeatService: 좌석 상태 변경 (RESERVED)
     ReservationService-->>APIGateway: 예약 생성 응답 반환
     APIGateway-->>User: 예약 생성 응답 전달
-    end
 ```
 
 ### Description
