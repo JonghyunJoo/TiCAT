@@ -40,7 +40,6 @@ sequenceDiagram
         end
     else 인증 실패 (존재하지 않는 회원)
         APIGateway-->>User: 오류 메시지 반환 (Not found User)
-    end
 ```
 ### Description
 
@@ -123,23 +122,23 @@ sequenceDiagram
     PaymentService->>WalletService: 잔액 정보 조회 요청(OpenFeign)
     WalletService-->>PaymentService: 잔액 정보 조회 반환
     alt 잔액이 충분함
-    PaymentService->>PaymentService: 결제 생성
-    PaymentService->>Kafka: 결제 성공 이벤트 발행 (PaymentSuccessEvent)
-    Kafka-->>ReservationService: 결제 성공 이벤트 소비 (PaymentSuccessEvent)
-    ReservationService->>ReservationService: 예약 상태 변경 (RESERVED)
-    Kafka-->>WalletService: 결제 성공 이벤트 소비 (PaymentSuccessEvent)
-    WalletService->>WalletService: 잔액 차감
-    PaymentService-->>APIGateway: 결제 성공 응답 전달
-    APIGateway-->>User: 결제 성공 응답 반환
+        PaymentService->>PaymentService: 결제 생성
+        PaymentService->>Kafka: 결제 성공 이벤트 발행 (PaymentSuccessEvent)
+        Kafka-->>ReservationService: 결제 성공 이벤트 소비 (PaymentSuccessEvent)
+        ReservationService->>ReservationService: 예약 상태 변경 (RESERVED)
+        Kafka-->>WalletService: 결제 성공 이벤트 소비 (PaymentSuccessEvent)
+        WalletService->>WalletService: 잔액 차감
+        PaymentService-->>APIGateway: 결제 성공 응답 전달
+        APIGateway-->>User: 결제 성공 응답 반환
     else 잔액이 부족함
-    PaymentService->>Kafka: 결제 실패 이벤트 발행 (PaymentFailedEvent)
-    Kafka-->>ReservationService: 결제 실패 이벤트 소비 (PaymentFailedEvent)
-    ReservationService->>ReservationService: 예약 상태 변경 (CANCELED)
-    ReservationService->>Kafka: 예약 취소 이벤트 발행(ReservationCanceledEvent)
-    Kafka-->>SeatService: 예약 취소 이벤트 소비 (ReservationCanceledEvent)
-    SeatService->>SeatService: 좌석 상태 변경 (AVAILABLE)
-    PaymentService-->>APIGateway: 결제 실패 응답 전달
-    APIGateway-->>User: 결제 실패 응답 반환
+        PaymentService->>Kafka: 결제 실패 이벤트 발행 (PaymentFailedEvent)
+        Kafka-->>ReservationService: 결제 실패 이벤트 소비 (PaymentFailedEvent)
+        ReservationService->>ReservationService: 예약 상태 변경 (CANCELED)
+        ReservationService->>Kafka: 예약 취소 이벤트 발행(ReservationCanceledEvent)
+        Kafka-->>SeatService: 예약 취소 이벤트 소비 (ReservationCanceledEvent)
+        SeatService->>SeatService: 좌석 상태 변경 (AVAILABLE)
+        PaymentService-->>APIGateway: 결제 실패 응답 전달
+        APIGateway-->>User: 결제 실패 응답 반환
     end
 
 ```
