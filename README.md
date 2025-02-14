@@ -93,7 +93,7 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 더 자세한 MSA 전환 과정이 궁금하시다면
 <br>
 #### Docs 5. kafka_transactional
-https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation?tab=readme-ov-file
+https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/05_kafka_transactional.md
 
 #### MSA 전환기 포스트
 https://velog.io/@j3261221/MSA-MSA-전환-프로젝트-MSA란
