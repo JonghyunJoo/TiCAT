@@ -27,8 +27,9 @@ pipeline {
         stage('Build Gradle') {
             steps {
                 dir('apigateway-service'){
-                    sh './gradlew build'
-                    sh 'ls -al ./build'
+                    sh 'ls'
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew clean build'
                 }
             }
             post {
