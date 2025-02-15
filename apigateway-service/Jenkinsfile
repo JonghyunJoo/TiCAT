@@ -12,7 +12,7 @@ pipeline {
         stage('Check out application git branch') {
             steps {
                 checkout scm
-                dir('apigateway-service')
+
             }
             post {
                 failure {
@@ -26,8 +26,10 @@ pipeline {
 
         stage('Build Gradle') {
             steps {
-                sh './gradlew build'
-                sh 'ls -al ./build'
+                dir('apigateway-service'){
+                    sh './gradlew build'
+                    sh 'ls -al ./build'
+                }
             }
             post {
                 success {
@@ -42,8 +44,10 @@ pipeline {
         stage('Build Docker') {
             steps {
                 script {
-                    sh "docker build -t ${service}:${BUILD_NUMBER} ."
-                    sh "docker tag ${service}:${BUILD_NUMBER} ${dockerHubRepository}:${BUILD_NUMBER}"
+                    dir('apigateway-service'){
+                        sh "docker build -t ${service}:${BUILD_NUMBER} ."
+                        sh "docker tag ${service}:${BUILD_NUMBER} ${dockerHubRepository}:${BUILD_NUMBER}"
+                    }
                 }
             }
         }
