@@ -1,4 +1,21 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.5'
+	id 'io.spring.dependency-management' version '1.1.6'
+}
+
+ext {
+	set('springCloudVersion', "2023.0.0")
+}
+
+repositories {
+	mavenCentral()
+}
+
+
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.cloud:spring-cloud-starter'
@@ -23,15 +40,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'io.projectreactor:reactor-test'
 }
-String jarName = "apigateway-service.jar"
 
-tasks.named("bootJar") {
-	bootJar.getArchiveFileName().set(jarName)
-
-	bootJar.doLast(task -> {
-		copy(copySpec -> {
-			copySpec.from("build/libs/" + jarName)
-			copySpec.into("../build/libs")
-		})
-	})
+tasks.named('test') {
+	useJUnitPlatform()
 }
