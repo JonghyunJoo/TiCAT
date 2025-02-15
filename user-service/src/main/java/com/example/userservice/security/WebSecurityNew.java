@@ -60,7 +60,7 @@ public class WebSecurityNew {
                         .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
 //                        .requestMatchers("/**").access(this::hasIpAddress)
                         .requestMatchers("/**").access(
-                                new WebExpressionAuthorizationManager("hasIpAddress('127.0.0.1') or hasIpAddress('192.168.0.2')")) // host pc ip address
+                                new WebExpressionAuthorizationManager("hasIpAddress('127.0.0.1') or hasIpAddress('192.168.65.3')"))
                         .anyRequest().authenticated()
                 )
                 .authenticationManager(authenticationManager)

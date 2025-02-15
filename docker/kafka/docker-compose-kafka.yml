@@ -21,7 +21,7 @@ services:
       - KAFKA_ENABLE_KRAFT=yes # KRaft 모드 활성화
       - KAFKA_CFG_BROKER_ID=0
       - KAFKA_CFG_NODE_ID=0
-      - KAFKA_KRAFT_CLUSTER_ID=HsDBs9l6UUmQq7Y5E6bNlw # 고유 클러스터 ID, 모든 브로커에 동일하게 설정
+      - KAFKA_KRAFT_CLUSTER_ID=HsDBs9l6UUmQq7Y5E6bNlw
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@Kafka00Service:9093,1@Kafka01Service:9093,2@Kafka02Service:9093
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       # 리스너 설정
@@ -49,10 +49,10 @@ services:
       - '9101:10000' # 외부 접근을 위한 EXTERNAL 리스너
     environment:
       # KRaft 설정
-      - KAFKA_ENABLE_KRAFT=yes # KRaft 모드 활성화
+      - KAFKA_ENABLE_KRAFT=yes
       - KAFKA_CFG_BROKER_ID=1
       - KAFKA_CFG_NODE_ID=1
-      - KAFKA_KRAFT_CLUSTER_ID=HsDBs9l6UUmQq7Y5E6bNlw # 고유 클러스터 ID, 모든 브로커에 동일하게 설정
+      - KAFKA_KRAFT_CLUSTER_ID=HsDBs9l6UUmQq7Y5E6bNlw
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@Kafka00Service:9093,1@Kafka01Service:9093,2@Kafka02Service:9093
       - KAFKA_CFG_PROCESS_ROLES=controller,broker
       # 리스너 설정
