@@ -80,7 +80,7 @@ pipeline {
                             sh "git add ."
                             sh "git diff-index --quiet HEAD || git commit -m 'Update ${service}-service image to ${BUILD_NUMBER}'"
                             sh "git remote set-url origin https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/JonghyunJoo/ConcertReservation-Helm-Chart.git"
-                            sh "git push origin main"
+                            sh "git push origin master"
                         }
                     }
                 }
