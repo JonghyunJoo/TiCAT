@@ -1,5 +1,5 @@
 # 첫 번째 단계: 애플리케이션 빌드
-FROM openjdk:21-jdk AS builder
+FROM openjdk:21-jdk-alpine AS builder
 COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
@@ -8,7 +8,7 @@ COPY src src
 RUN chmod +x ./gradlew
 RUN ./gradlew bootJar
 # 두 번째 단계: 최종 실행 이미지 생성
-FROM openjdk:21-ea-slim
+FROM openjdk:21-jdk-alpine
 
 # 첫 번째 단계에서 생성된 JAR 파일을 최종 이미지로 복사
 COPY --from=builder build/libs/*.jar apigateway-app.jar
