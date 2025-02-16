@@ -13,7 +13,6 @@ import org.springframework.web.client.RestTemplate;
 import java.time.Duration;
 
 @SpringBootApplication
-@EnableDiscoveryClient
 @EnableFeignClients
 @EnableJpaAuditing
 public class UserServiceApplication {

@@ -12,7 +12,7 @@ pipeline {
         stage('Check out application git branch') {
             steps {
                 checkout scm
-                dir("${service}-service")
+
             }
             post {
                 failure {
@@ -26,8 +26,11 @@ pipeline {
 
         stage('Build Gradle') {
             steps {
-                sh './gradlew build'
-                sh 'ls -al ./build'
+                dir("${service}-service"){
+                    sh 'ls'
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew clean build'
+                }
             }
             post {
                 success {
@@ -42,8 +45,10 @@ pipeline {
         stage('Build Docker') {
             steps {
                 script {
-                    sh "docker build -t ${service}:${BUILD_NUMBER} ."
-                    sh "docker tag ${service}:${BUILD_NUMBER} ${dockerHubRepository}:${BUILD_NUMBER}"
+                    dir("${service}-service"){
+                        sh "docker build -t ${service}:${BUILD_NUMBER} ."
+                        sh "docker tag ${service}:${BUILD_NUMBER} ${dockerHubRepository}:${BUILD_NUMBER}"
+                    }
                 }
             }
         }
@@ -75,7 +80,7 @@ pipeline {
                             sh "git add ."
                             sh "git diff-index --quiet HEAD || git commit -m 'Update ${service}-service image to ${BUILD_NUMBER}'"
                             sh "git remote set-url origin https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/JonghyunJoo/ConcertReservation-Helm-Chart.git"
-                            sh "git push origin main"
+                            sh "git push origin master"
                         }
                     }
                 }
