@@ -1,0 +1,203 @@
+server:
+  port: 8000
+
+
+spring:
+
+  application:
+    name: apigateway-service
+
+  cloud:
+    gateway:
+      default-filters:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: user-service
+          uri: http://user-service.user-ns.svc.cluster.local
+          predicates:
+            - Path= /user-service/users, /user-service/login, /user-service/actuator/**, /user-service/swagger-ui/**, /user-service/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
+        - id: user-service
+          uri: http://user-service.user-ns.svc.cluster.local
+          predicates:
+            - Path=/user-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: concert-service
+          uri: http://concert-service.concert-ns.svc.cluster.local
+          predicates:
+            - Path= /concert-service/actuator/**, /concert-service/swagger-ui/**, /concert-service/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/concert-service/(?<segment>.*), /$\{segment}
+
+        - id: concert-service
+          uri: http://concert-service.concert-ns.svc.cluster.local
+          predicates:
+            - Path=/concert-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/concert-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: seat-service
+          uri: http://seat-service.seat-ns.svc.cluster.local
+          predicates:
+            - Path= /seat-service/actuator/**, /seat-service/swagger-ui/**, /seat-service/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/seat-service/(?<segment>.*), /$\{segment}
+
+        - id: seat-service
+          uri: http://seat-service.seat-ns.svc.cluster.local
+          predicates:
+            - Path=/seat-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/seat-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: reservation-service
+          uri: http://reservation-service.reservation-ns.svc.cluster.local
+          predicates:
+            - Path= /reservation-service/actuator/**, /reservation-service/swagger-ui/**, /reservation-service/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/reservation-service/(?<segment>.*), /$\{segment}
+
+        - id: reservation-service
+          uri: http://reservation-service.reservation-ns.svc.cluster.local
+          predicates:
+            - Path=/reservation-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/reservation-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: payment-service
+          uri: http://payment-service.payment-ns.svc.cluster.local
+          predicates:
+            - Path= /payment-service/actuator/**, /payment-service/swagger-ui/**, /payment-service/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/payment-service/(?<segment>.*), /$\{segment}
+
+        - id: payment-service
+          uri: http://payment-service.payment-ns.svc.cluster.local
+          predicates:
+            - Path=/payment-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/payment-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: wallet-service
+          uri: http://wallet-service.wallet-ns.svc.cluster.local
+          predicates:
+            - Path= /wallet-service/actuator/**, /wallet-service/swagger-ui/**, /wallet-service/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/wallet-service/(?<segment>.*), /$\{segment}
+
+        - id: wallet-service
+          uri: http://wallet-service.wallet-ns.svc.cluster.local
+          predicates:
+            - Path=/wallet-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/wallet-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+        - id: queue-service
+          uri: http://queue-service.queue-ns.svc.cluster.local
+          predicates:
+            - Path= /queue-service/actuator/**, /queue-service/swagger-ui/**, /queue-service/v3/api-docs/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/queue-service/(?<segment>.*), /$\{segment}
+
+        - id: queue-service
+          uri: http://queue-service.queue-ns.svc.cluster.local
+          predicates:
+            - Path=/queue-service/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/queue-service/(?<segment>.*), /$\{segment}
+            - AuthorizationHeaderFilter
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    use-root-path: true
+    urls[0]:
+      name: 유저 서비스
+      url: /user-service/v3/api-docs
+    urls[1]:
+      name: 콘서트 서비스
+      url: /concert-service/v3/api-docs
+    urls[2]:
+      name: 좌석 서비스
+      url: /seat-service/v3/api-docs
+    urls[3]:
+      name: 예약 서비스
+      url: /reservation-service/v3/api-docs
+    urls[4]:
+      name: 결제 서비스
+      url: /payment-service/v3/api-docs
+    urls[5]:
+      name: 지갑 서비스
+      url: /wallet-service/v3/api-docs
+    urls[6]:
+      name: 대기열 서비스
+      url: /queue-service/v3/api-docs
+
+management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#    propagation:
+#      consume: B3
+#      produce: B3
+#  zipkin:
+#    tracing:
+#      endpoint: http://zipkin-service:9411/api/v2/spans
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springdoc: debug
+
+token:
+  expiration_time: 86400000
+  secret: P5ZcEQDJ2hIvwbeYqE7hZ9awzDqlPsNzlpAEhNft0Rg
+
+kafka:
+  bootstrap-servers: 3.34.8.99:9092

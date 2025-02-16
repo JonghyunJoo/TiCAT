@@ -1,0 +1,76 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    url: jdbc:mysql://34.118.239.82:3306
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    generate-ddl: false
+
+token:
+  expiration_time: 86400000
+  secret: P5ZcEQDJ2hIvwbeYqE7hZ9awzDqlPsNzlpAEhNft0Rg
+
+logging:
+  level:
+    com.example.userservice.client: DEBUG
+  pattern:
+    correlation: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+
+management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#    propagation:
+#      consume: B3
+#      produce: B3
+#  zipkin:
+#    tracing:
+#      endpoint: http://localhost:9411/api/v2/spans
+  endpoints:
+    web:
+      exposure:
+        include: info, health, prometheus, metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 80
+        slow-call-duration-threshold: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        max-wait-duration-in-half-open-state: 0
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 10
+        wait-duration-in-open-state: 10s
+    instances:
+      default-circuitbreaker:
+        base-config: default
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+  enable-spring-security: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
