@@ -5,7 +5,7 @@
 - [이벤트 시퀀스 다이어그랩](#3-이벤트-시퀀스-다이어그램)
 - [ERD](#4-ERD)
 - [API 명세 문서](#5-API-명세-문서)
-- [MSA 관점에서의 트랜잭션 관리 및 SAGA 패턴 설계](#6-MSA-관점에서의-트랜잭션-관리-및-SAGA-패턴-설계)
+- [주요 기술](#6-주요-기술)
 - [동시성 문제와 극복](#7-동시성-문제와-극복)
 - [대기열 시스템 설계 및 Redis 이관](#8-대기열-시스템-설계-및-Redis-이관)
 - [캐시 도입을 통한 성능 개선](#9-캐시-도입을-통한-성능-개선)
@@ -56,7 +56,8 @@
 ## 3. [이벤트 시퀀스 다이어그램](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/02_EventSequence.md)
 ## 4. [ERD](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/03_ERD.md)
 ## 5. [API 명세 문서](https://flossy-name-c7c.notion.site/Spring-Cloud-ConcertReservation-1908f15d8fbc80ddb4ddcd3284892151)
-## 6. MSA 관점에서의 트랜잭션 관리 및 SAGA 패턴 설계
+## 6. 주요 기술
+## MSA
 MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture의 한계를 벗어나 애플리케이션을 느슨하게 결합된 서비스의 모임으로 구조화하는 서비스 지향 아키텍처(SOA) 스타일의 일종인 소프트웨어 개발 기법이다.
 
 기존에 진행하고 있던 콘서트 예약 프로젝트를 크게 6개의 서비스를 분리하고 서버와 DB를 각 서비스에 맞게 분류하여 구현하였다.
@@ -97,8 +98,11 @@ https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/
 
 #### MSA 전환기 포스트
 https://velog.io/@j3261221/MSA-MSA-전환-프로젝트-MSA란
-## 7. 동시성 문제와 극복
+## 쿠버네티스
+### 도커 컨테이너 오케스트레이션
+### 아키텍처
 
+## 7. 동시성 문제와 극복
 ## 8. 대기열 시스템 설계 및 Redis 이관
 ## 9. 캐시 도입을 통한 성능 개선
 ## 10. 쿼리 분석 및 인덱스 필요성 평가
