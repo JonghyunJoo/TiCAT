@@ -6,7 +6,7 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:mysql://34.118.239.82:3306/user
+    url: jdbc:mysql://34.118.239.82:3306/user-db
     username: root
     password: root
 
