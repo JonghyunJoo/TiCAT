@@ -1,5 +1,6 @@
-# 대규모 트래픽에도 안정적인 콘서트 티켓팅 플랫폼
+# 🎫 대규모 트래픽에도 안정적인 콘서트 티켓팅 플랫폼
 
+### 🗒 목차
 - [프로젝트 개요](#1-프로젝트-개요)
 - [마일스톤](#2-마일스톤)
 - [이벤트 시퀀스 다이어그랩](#3-이벤트-시퀀스-다이어그램)
@@ -52,10 +53,10 @@
 - 짧은 시간에 많은 트래픽이 발생할 것으로 가정
 - 특정 요청에 많은 트래픽이 동시에 발생할 것으로 가정
 
-## 2. [마일스톤](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/01_Milestone.md)
-## 3. [이벤트 시퀀스 다이어그램](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/02_EventSequence.md)
-## 4. [ERD](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/03_ERD.md)
-## 5. [API 명세 문서](https://flossy-name-c7c.notion.site/Spring-Cloud-ConcertReservation-1908f15d8fbc80ddb4ddcd3284892151)
+## 2. [👉 마일스톤](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/01_Milestone.md)
+## 3. [👉 이벤트 시퀀스 다이어그램](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/02_EventSequence.md)
+## 4. [👉 ERD](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/03_ERD.md)
+## 5. [👉 API 명세 문서](https://flossy-name-c7c.notion.site/Spring-Cloud-ConcertReservation-1908f15d8fbc80ddb4ddcd3284892151)
 ## 6. 주요 기술
 ## MSA
 MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture의 한계를 벗어나 애플리케이션을 느슨하게 결합된 서비스의 모임으로 구조화하는 서비스 지향 아키텍처(SOA) 스타일의 일종인 소프트웨어 개발 기법이다.
