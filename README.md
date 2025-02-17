@@ -25,15 +25,16 @@
 
 - [기술 스택](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EA%B8%B0%EC%88%A0-%EC%8A%A4%ED%83%9D)
 - [프로젝트 산출물](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EC%82%B0%EC%B6%9C%EB%AC%BC)
+
 <br>
 
 ---
 
 # ✨ 서비스 개요
 
-**특정한 시각에 사람들이 한꺼번에 몰려 트래픽이 집중되는 것을 가정한 티케팅 사이트**
+**특정한 시간에 사람들이 한꺼번에 몰려 트래픽이 집중되는 것을 가정한 티케팅 사이트**
 
-**이러한 상황에서도 서버가 터지지 않게 하기 위한 안정적인 아키텍처를 고민해보고 프로젝트에 적용**
+**대규모 트래픽이 있는 상황에서도 안정적으로 요청을 처리할 수 있는 아키텍처를 고민해보고 프로젝트에 적용**
 
 <br>
 
@@ -52,7 +53,7 @@
   - 동시 접속자 **1만명 이상** 처리 목표
   - 대기열 진입 후 평균 대기 시간 3분 **이내**
 
-## 2. 공정한 예약 시스템 제공
+### 2. 공정한 예약 시스템 제공
 - 중복 예약 방지
   - 동시성 제어를 통한 **중복 예약 발생율 0% 목표**
 
@@ -60,7 +61,7 @@
 - 예매 실패자를 위한 취소표 알림 시스템 운영
   - 대기열 혹은 동시성 제어로 인해 예매하지 못한 유저 대상으로 **취소표 알림 기능 제공**
 
-## 3. 모니터링 및 장애 대응 체계 구축
+### 3. 모니터링 및 장애 대응 체계 구축
 
 - 애플리케이션 및 DB 성능 모니터링
   - 시스템 리소스(CPU, 메모리, DB 연결 수) **실시간 모니터링 대시보드 제공**
@@ -99,6 +100,7 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 
 #### 🔗 [MSA 전환기 포스트](https://velog.io/@j3261221/MSA-MSA-전환-프로젝트-MSA란)
 
+
 ## ✔ 배포 및 CI/CD (25.02 ~)
 기존 로컬환경에서 Docker Desktop을 통해 배포하던 방식에서 Google Kubernetes Engine을 통해 구축한 쿠버네티스 클러스터에 배포하는 방식으로 변경
 ### 아키텍처
@@ -125,10 +127,12 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 대규모 트래픽이 발생하는 상황에서 생길 수 밖에 없는 동시성 이슈에 대해 인지하고 이를 처리하기 위해 DB 락, 분산 락 등의 방안을 적용하고 비교해 문제를 극복해보았다.
 
 #### 🔗[Docs 6. ConcurrencyReport](https://github.com/JonghyunJoo/ConcertReservation/blob/master/docs/06_ConcurrencyReport.md)
+
 ## ✔ 대기열 시스템 설계 및 Redis 이관
 많은 수의 이용자가 한꺼번에 요청을 시도할 것으로 예상되는 서비스들에 대해 DB의 처리량을 고려하여 순서를 보장하는 대기열 시스템을 통해 안정적인 요청 처리 시스템을 구현하였다.
 
 #### 🔗[Docs 7. Redis_Queue](https://github.com/JonghyunJoo/ConcertReservation/blob/master/docs/07_Redis_Queue.md)
+
 ## ✔  캐시 도입을 통한 성능 개선
 많은 요청이 발생할 것으로 예상되는 서비스 메소드에 캐시를 적용함으로써 데이터베이스 부하 감소와 응답시간을 단축하였다.
 
@@ -145,6 +149,9 @@ K6를 통해 Load Test와 Peak Test를 진행하였으며 Prometheus와 Grafana�
 
 #### 🔗[Docs 10. Incident_Response](https://github.com/JonghyunJoo/ConcertReservation/blob/master/docs/10_Incident_Response.md)
 
+<br>
+
+---
 # 🔧 기술 스택
 
 `Backend`
