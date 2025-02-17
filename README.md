@@ -1,28 +1,30 @@
 # 🎫 대규모 트래픽에도 안정적인 콘서트 티켓팅 플랫폼
 
 
-- [프로젝트 개요](#✨-프로젝트-개요)
+- [프로젝트 개요](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EC%84%9C%EB%B9%84%EC%8A%A4-%EA%B0%9C%EC%9A%94)
 
-- [목표 & KPI](#🎯-목표-&-KPI(핵심성과지표))
+- [목표 & KPI](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EB%AA%A9%ED%91%9C--kpi%ED%95%B5%EC%8B%AC%EC%84%B1%EA%B3%BC%EC%A7%80%ED%91%9C)
 
-- [주요 기술](#‍💻-주요-기술)
-  - [MSA](#✔-MSA)
+- [주요 기술](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EC%A3%BC%EC%9A%94-%EA%B8%B0%EC%88%A0)
+
+  - [MSA](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-msa)
     - msa 설계도
     - msa를 도입하며 얻은 이점
     - Spring Cloud Gateway 및 Spring Eureka
-  - [배포 및 CI/CD (25.02~)](#✔-배포-및-CI/CD-(25.02-~))
+
+  - [배포 및 CI/CD (25.02~)](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EB%B0%B0%ED%8F%AC-%EB%B0%8F-cicd-2502-)
     - 아키텍처 설계도
     - 배포 과정
     - 배포 환경의 변화로 얻은 이점
-  - [동시성 문제와 극복](#✔-동시성-문제와-극복)
-  - [대기열 시스템 설계 및 Redis 이관](#✔-대기열-시스템-설계-및-Redis-이관)
-  - [캐시 도입을 통한 성능 개선](#✔-캐시-도입을-통한-성능-개선)
-  - [쿼리 분석 및 인덱스 필요성 평가](#✔-쿼리-분석-및-인덱스-필요성-평가)
-  - [API 부하 테스트 분석과 장애 대응 방안](#✔-API-부하-테스트-분석과-장애-대응-방안)
 
-- [기술 스택](#🔧-기술-스택)
-- [프로젝트 산출물](#📃-프로젝트-산출물)
-- [Commit & Branch 전략](💑Commit-&-Branch-전략)
+  - [동시성 문제와 극복](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#--%EB%8F%99%EC%8B%9C%EC%84%B1-%EB%AC%B8%EC%A0%9C%EC%99%80-%EA%B7%B9%EB%B3%B5)
+  - [대기열 시스템 설계 및 Redis 이관](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EB%8C%80%EA%B8%B0%EC%97%B4-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%84%A4%EA%B3%84-%EB%B0%8F-redis-%EC%9D%B4%EA%B4%80)
+  - [캐시 도입을 통한 성능 개선](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#--%EC%BA%90%EC%8B%9C-%EB%8F%84%EC%9E%85%EC%9D%84-%ED%86%B5%ED%95%9C-%EC%84%B1%EB%8A%A5-%EA%B0%9C%EC%84%A0)
+  - [쿼리 분석 및 인덱스 필요성 평가](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#--%EC%BF%BC%EB%A6%AC-%EB%B6%84%EC%84%9D-%EB%B0%8F-%EC%9D%B8%EB%8D%B1%EC%8A%A4-%ED%95%84%EC%9A%94%EC%84%B1-%ED%8F%89%EA%B0%80)
+  - [API 부하 테스트 분석과 장애 대응 방안](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-api-%EB%B6%80%ED%95%98-%ED%85%8C%EC%8A%A4%ED%8A%B8-%EB%B6%84%EC%84%9D%EA%B3%BC-%EC%9E%A5%EC%95%A0-%EB%8C%80%EC%9D%91-%EB%B0%A9%EC%95%88)
+
+- [기술 스택](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EA%B8%B0%EC%88%A0-%EC%8A%A4%ED%83%9D)
+- [프로젝트 산출물](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EC%82%B0%EC%B6%9C%EB%AC%BC)
 <br>
 
 ---
@@ -124,7 +126,7 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 
 #### 🔗[Docs 6. ConcurrencyReport](https://github.com/JonghyunJoo/ConcertReservation/blob/master/docs/06_ConcurrencyReport.md)
 ## ✔ 대기열 시스템 설계 및 Redis 이관
-많은 수의 이용자가 한꺼번에 요청을 시도할 것으로 예상되는 서비스들에 대해 DB의 처리량을 고려하여 순서를 보장하는 대기열 시스템을 통해 안정적인 요청 처리를 구현하였다.
+많은 수의 이용자가 한꺼번에 요청을 시도할 것으로 예상되는 서비스들에 대해 DB의 처리량을 고려하여 순서를 보장하는 대기열 시스템을 통해 안정적인 요청 처리 시스템을 구현하였다.
 
 #### 🔗[Docs 7. Redis_Queue](https://github.com/JonghyunJoo/ConcertReservation/blob/master/docs/07_Redis_Queue.md)
 ## ✔  캐시 도입을 통한 성능 개선
