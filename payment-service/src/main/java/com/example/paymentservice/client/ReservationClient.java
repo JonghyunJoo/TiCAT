@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "reservation-service")
+@FeignClient(name = "reservation-service", url="http://reservation-service.reservation-ns.svc.cluster.local")
 public interface ReservationClient {
 
     @GetMapping("/totalPrice/{reservationGroupId}")

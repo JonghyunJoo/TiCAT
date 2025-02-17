@@ -1,51 +1,42 @@
 server:
-  port: 12000
+  port: 8002
 
 spring:
   application:
     name: seat-service
   datasource:
-    url: jdbc:mysql://msa-mysql:3306/seat_service
-    username: msa_user
-    password: msa_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql-seat-service.mysql-seat-ns.svc.cluster.local:3306/seat-db
+    username: root
+    password: root
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    database: mysql
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    generate-ddl: false
+
   kafka:
     producer:
-      bootstrap-servers: Kafka00Service:9092,Kafka01Service:9092,Kafka02Service:9092
+      bootstrap-servers: kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       group-id: consumerGroup
       auto-offset-reset: earliest
-      bootstrap-servers: Kafka00Service:9092,Kafka01Service:9092,Kafka02Service:9092
+      bootstrap-servers: kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
-eureka:
-  instance:
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://service-discovery:8761/eureka
-
 management:
-  tracing:
-    sampling:
-      probability: 1.0
-    propagation:
-      consume: B3
-      produce: B3
-  zipkin:
-    tracing:
-      endpoint: http://zipkin-service:9411/api/v2/spans
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#    propagation:
+#      consume: B3
+#      produce: B3
+#  zipkin:
+#    tracing:
+#      endpoint: http://zipkin-service:9411/api/v2/spans
   endpoints:
     web:
       exposure:

@@ -12,7 +12,7 @@ public class RedissonConfig {
     public RedissonClient redissonClient() {
         Config config = new Config();
         config.useSingleServer()
-                .setAddress("redis://redis-service:6379")
+                .setAddress("redis://redis-service.redis-ns.svc.cluster.local:6379")
                 .setConnectionPoolSize(10)
                 .setConnectionMinimumIdleSize(5);
         return Redisson.create(config);

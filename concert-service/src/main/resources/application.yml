@@ -1,34 +1,26 @@
 server:
-  port: 11000
+  port: 8001
 
 spring:
   application:
     name: concert-service
+
   datasource:
-    url: jdbc:mysql://msa-mysql:3306/concert_service
-    username: msa_user
-    password: msa_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql-concert-service.mysql-concert-ns.svc.cluster.local:3306/concert-db
+    username: root
+    password: root
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    database: mysql
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+    generate-ddl: false
+
   data:
     redis:
-      host: redis-service
+      host: redis-service.redis-ns.svc.cluster.local
       port: 6379
       timeout: 2000
-
-eureka:
-  instance:
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://service-discovery:8761/eureka
 
 logging:
   level:
@@ -37,15 +29,15 @@ logging:
     correlation: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
 
 management:
-  tracing:
-    sampling:
-      probability: 1.0
-    propagation:
-      consume: B3
-      produce: B3
-  zipkin:
-    tracing:
-      endpoint: http://zipkin-service:9411/api/v2/spans
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#    propagation:
+#      consume: B3
+#      produce: B3
+#  zipkin:
+#    tracing:
+#      endpoint: http://zipkin-service:9411/api/v2/spans
   endpoints:
     web:
       exposure:

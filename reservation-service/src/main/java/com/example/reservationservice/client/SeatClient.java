@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "seat-service")
+@FeignClient(name = "seat-service" url="http://seat-service.seat-ns.svc.cluster.local")
 public interface SeatClient {
     @CircuitBreaker(name = "default-circuitbreaker", fallbackMethod = "getSeatByIdFallback")
     @GetMapping("/{seatId}")

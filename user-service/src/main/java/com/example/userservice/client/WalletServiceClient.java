@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(name="wallet-service")
 public interface WalletServiceClient {
-    @CircuitBreaker(name = "default-circuitbreaker", fallbackMethod = "createWalletFallback")
+    @CircuitBreaker(name = "default-circuitbreaker", fallbackMethod = "createWalletFallback", url = "http://wallet-service.wallet-ns.svc.cluster.local")
     @PostMapping("/{userId}")
     Long createWallet(@PathVariable Long userId);
 

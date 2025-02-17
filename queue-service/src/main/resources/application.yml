@@ -4,40 +4,25 @@ server:
 spring:
   application:
     name: queue-service
-  h2:
-    console:
-      enabled: true
-      settings:
-        web-allow-others: true
-      path: /h2-console
+
+  datasource:
+    url: jdbc:mysql://mysql-wallet-service.mysql-wallet-ns.svc.cluster.local:3306/wallet-db
+    username: root
+    password: root
+
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
-    generate-ddl: true
-    database: h2
-    defer-datasource-initialization: true
-  datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
+    generate-ddl: false
+
   cache:
     type: redis
   data:
     redis:
-      host: redis-service
+      host: redis-service.redis-ns.svc.cluster.local
       port: 6379
       timeout: 2000
-
-eureka:
-  instance:
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://service-discovery:8761/eureka
 
 logging:
   level:

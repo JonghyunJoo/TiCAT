@@ -1,0 +1,90 @@
+pipeline {
+    agent any
+
+    environment {
+        service = 'reservation'
+        dockerHubRepository = 'jonghyunjoo1235/reservation-service'
+        dockerHubRegistryCredential = 'docker-hub'
+        githubCredential = 'github'
+    }
+
+    stages {
+        stage('Check out application git branch') {
+            steps {
+                checkout scm
+
+            }
+            post {
+                failure {
+                    echo 'Repository checkout failure'
+                }
+                success {
+                    echo 'Repository checkout success'
+                }
+            }
+        }
+
+        stage('Build Gradle') {
+            steps {
+                dir("${service}-service"){
+                    sh 'ls'
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew clean build'
+                }
+            }
+            post {
+                success {
+                    echo 'Gradle build success'
+                }
+                failure {
+                    echo 'Gradle build failed'
+                }
+            }
+        }
+
+        stage('Build Docker') {
+            steps {
+                script {
+                    dir("${service}-service"){
+                        sh "docker build -t ${service}:${BUILD_NUMBER} ."
+                        sh "docker tag ${service}:${BUILD_NUMBER} ${dockerHubRepository}:${BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: dockerHubRegistryCredential, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
+                        sh "docker push ${dockerHubRepository}:${BUILD_NUMBER}"
+                        sh "docker image prune -a -f || true"
+                    }
+                }
+            }
+        }
+
+        stage('Update k8s Manifest') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: githubCredential, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_PASSWORD')]) {
+                        sh "rm -rf ConcertReservation-Helm-Chart"
+                        sh "git clone https://github.com/JonghyunJoo/ConcertReservation-Helm-Chart.git"
+                        sh "ls -al"
+                        dir("ConcertReservation-Helm-Chart/${service}") {
+                            sh "sed -i 's|repository: \\S*|repository: ${dockerHubRepository}|' values.yaml"
+                            sh "sed -i 's|tag: \\S*|tag: ${BUILD_NUMBER}|' values.yaml"
+                            sh "git config user.email 'j3261221@gmail.com'"
+                            sh "git config user.name 'Jonghyun Joo'"
+                            sh "git add ."
+                            sh "git diff-index --quiet HEAD || git commit -m 'Update ${service}-service image to ${BUILD_NUMBER}'"
+                            sh "git remote set-url origin https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/JonghyunJoo/ConcertReservation-Helm-Chart.git"
+                            sh "git push origin master"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

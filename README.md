@@ -7,6 +7,8 @@
 - [ERD](#4-ERD)
 - [API 명세 문서](#5-API-명세-문서)
 - [주요 기술](#6-주요-기술)
+  - MSA
+  - 배포 및 CI/CD
 - [동시성 문제와 극복](#7-동시성-문제와-극복)
 - [대기열 시스템 설계 및 Redis 이관](#8-대기열-시스템-설계-및-Redis-이관)
 - [캐시 도입을 통한 성능 개선](#9-캐시-도입을-통한-성능-개선)
@@ -98,10 +100,20 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 
 #### 🔗 [MSA 전환기 포스트](https://velog.io/@j3261221/MSA-MSA-전환-프로젝트-MSA란)
 
-## 쿠버네티스
-### 도커 컨테이너 오케스트레이션
-
+## 7. 배포 및 CI/CD (25.02 ~)
+기존 로컬환경에서 Docker Desktop을 통해 배포하던 방식에서 Google Kubernetes Engine을 통해 구축한 쿠버네티스 클러스터에 배포하는 방식으로 변경
 ### 아키텍처
+![Image](https://github.com/user-attachments/assets/45458f90-1d6e-4f40-b250-60d0fa4c73d6)
+
+### 배포과정
+![Image](https://github.com/user-attachments/assets/8d480f1c-a3f6-4918-8d1f-712a59d822cb)
+
+### 배포 환경 변화의 이점
+#### CI/CD 파이프라인의 완전한 자동화
+- Jenkins를 통해 애플리케이션의 빌드, 테스트, 패키징, 배포까지의 파이프라인을 자동화하고
+- ArgoCD는 배포된 상태를 관리하며 Kubernetes는 리소스를 최적화하여 전체 파이프라인이 자동으로 실행됩니다.
+#### 자원 효율성
+- 
 
 ## 7. 동시성 문제와 극복
 ## 8. 대기열 시스템 설계 및 Redis 이관
