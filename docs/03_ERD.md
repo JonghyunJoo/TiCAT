@@ -106,6 +106,5 @@ erDiagram
     ReservationGroup ||--|| Reservation : contains
     Wallet ||--|| TransactionHistory : has
 
-
 ```
 
