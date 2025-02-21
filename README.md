@@ -173,8 +173,6 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 - 예: 콘서트별 스케쥴 조회 쿼리 시 **758 ms가 소요되던 요청이 캐시 히트 시 11ms로 크게 단축되었다.**
 #### 데이터 일관성 유지
 - 적절한 TTL 설정과 상태 변경 시 즉시 캐시 무효화를 통해 데이터의 일관성을 유지한다.
-#### 실시간성 보장
-- 중요 데이터의 빠른 갱신과 즉시 캐시 무효화를 통해 실시간 정보를 제공한다.
 
 #### 🔗[Docs 8. Cache](https://github.com/JonghyunJoo/ConcertReservation/blob/master/docs/08_Cache.md)
 
@@ -194,6 +192,9 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 
 K6를 통해 Load Test와 Peak Test를 진행하였으며 Prometheus와 Grafana를 통해 시각화하였고 테스트 도중 발생한 문제와 앞으로 발생할 문제를 해결하기 위한 방안을 고민하였다.
 
+#### 콘서트 조회 및 예약 로직 Load Test 결과
+![Image](https://github.com/user-attachments/assets/ee79ee06-36d1-4cff-8d1c-5216ec2f75ae)
+
 ### 개선 필요 영역
 #### 응답 시간 일관성 향상
 - 부하가 증가할수록 응답 시간이 급격히 증가하는 현상이 발생하고 있다.
@@ -204,24 +205,24 @@ K6를 통해 Load Test와 Peak Test를 진행하였으며 Prometheus와 Grafana�
 
 ### 개선 방법
 #### 시도해본 방법
-- 캐싱 적용
+- **캐싱 적용**
   - 잔액 조회 API의 경우 실시간 데이터 변경 가능성 때문에 기존에는 캐싱을 적용하지 않았나 성능 개선을 위해 캐싱을 적용해보았다.
   - 성능 개선을 위해 캐싱을 적용했으나, 기대했던 응답 속도 개선이 나타나지 않고 오히려 증가하는 현상이 발생했다.
   - 예상 했던 결과는 아니었으나 현재 응답시간 증가의 원인이 DB 부하보다는 다른 요인이 성능 저하의 주요 원인이라는 것을 알 수 있었다.
 #### 시도해볼 수 있는 방법
-1. Auto Scaling 및 Load Balancing
-- 현재 Docker 컨테이너 기반 배포 중이나, Auto Scaling이 적용되지 않아 트래픽 급증 시 부하를 감당하지 못하는 상태로 보인다.
-- 트래픽이 일정 임계치를 초과할 경우 서버 인스턴스를 자동으로 확장(Scale-out)하여 대응하는 구조가 필요하다.
-- Load Balancer를 적용하여 트래픽을 여러 서버로 균등하게 분배하는 방식도 함께 적용해야 한다.
-2. 클라우드 기반 배포 (Cloud Deployment) 전환
-- 현재 로컬 환경에서 배포 중이며, CPU 및 RAM 사용량이 급증하는 것이 성능 저하의 주요 원인으로 추정된다.
-- AWS, GCP, Azure 등의 클라우드 환경으로 전환하여, 수직적 확장(Scale-up) 및 수평적 확장(Scale-out) 전략을 동시에 적용하는 것이 필요하다.
-3. 비동기 처리 및 메시지 큐 도입
--  현재 API 요청이 동기(Synchronous) 방식으로 처리되며, 일부 트랜잭션에서 병목이 발생하는 것으로 보인다.
--  Kafka, RabbitMQ 등의 메시지 큐(Message Queue) 시스템을 활용하여 비동기 이벤트 처리 구조를 도입할 필요가 있다.
-4. DB 최적화 및 Connection Pooling 개선
--  현재 DB 부하가 성능 저하의 주요 원인이 아닐 가능성이 높으나, 쿼리 최적화 및 Connection Pool 설정을 조정할 필요가 있다.
--  Read/Write 분리, 인덱스 최적화, 캐싱 레이어(Redis, Memcached) 활용 등을 고려해야 한다.
+- **1. Auto Scaling 및 Load Balancing**
+  - 현재 Docker 컨테이너 기반 배포 중이나, Auto Scaling이 적용되지 않아 트래픽 급증 시 부하를 감당하지 못하는 상태로 보인다.
+  - 트래픽이 일정 임계치를 초과할 경우 서버 인스턴스를 자동으로 확장(Scale-out)하여 대응하는 구조가 필요하다.
+  - Load Balancer를 적용하여 트래픽을 여러 서버로 균등하게 분배하는 방식도 함께 적용해야 한다.
+- **2. 클라우드 기반 배포 (Cloud Deployment) 전환**
+  - 현재 로컬 환경에서 배포 중이며, CPU 및 RAM 사용량이 급증하는 것이 성능 저하의 주요 원인으로 추정된다.
+  - AWS, GCP, Azure 등의 클라우드 환경으로 전환하여, 수직적 확장(Scale-up) 및 수평적 확장(Scale-out) 전략을 동시에 적용하는 것이 필요하다.
+- **3. 비동기 처리 및 메시지 큐 도입**
+  - 현재 API 요청이 동기(Synchronous) 방식으로 처리되며, 일부 트랜잭션에서 병목이 발생하는 것으로 보인다.
+  - Kafka, RabbitMQ 등의 메시지 큐(Message Queue) 시스템을 활용하여 비동기 이벤트 처리 구조를 도입할 필요가 있다.
+- **4. DB 최적화 및 Connection Pooling 개선**
+  - 현재 DB 부하가 성능 저하의 주요 원인이 아닐 가능성이 높으나, 쿼리 최적화 및 Connection Pool 설정을 조정할 필요가 있다.
+  - Read/Write 분리, 인덱스 최적화, 캐싱 레이어(Redis, Memcached) 활용 등을 고려해야 한다.
 ### 결론
 - 현재 시스템은 전반적으로 안정적인 성능을 보이며, 최대 2000명의 동시 접속을 처리할 수 있다.
 - 그러나 높은 부하 상황에서 응답 시간이 급격히 증가하는 문제가 있고, 이는 로컬 환경의 한계로 보이며, 이로 인해 사용자 경험이 저하될 가능성이 있다.
