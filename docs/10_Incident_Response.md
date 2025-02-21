@@ -685,8 +685,8 @@ time="2025-02-08T15:06:41Z" level=error msg="thresholds on metrics 'http_req_dur
   - 현재 로컬 환경에서 배포 중이며, CPU 및 RAM 사용량이 급증하는 것이 성능 저하의 주요 원인으로 추정된다.
   - AWS, GCP, Azure 등의 클라우드 환경으로 전환하여, 수직적 확장(Scale-up) 및 수평적 확장(Scale-out) 전략을 동시에 적용하는 것이 필요하다.
 - **3. 비동기 처리 및 메시지 큐 도입**
-  - 현재 API 요청이 동기(Synchronous) 방식으로 처리되며, 일부 트랜잭션에서 병목이 발생하는 것으로 보임.
-  - Kafka, RabbitMQ 등의 메시지 큐(Message Queue) 시스템을 활용하여 비동기 이벤트 처리 구조를 도입할 필요가 있음.
+  - 현재 API 요청이 동기(Synchronous) 방식으로 처리되며, 일부 트랜잭션에서 병목이 발생하는 것으로 보인다.
+  - Kafka, RabbitMQ 등의 메시지 큐(Message Queue) 시스템을 활용하여 비동기 이벤트 처리 구조를 도입할 필요가 있다.
 - **4. DB 최적화 및 Connection Pooling 개선**
   - 현재 DB 부하가 성능 저하의 주요 원인이 아닐 가능성이 높으나, 쿼리 최적화 및 Connection Pool 설정을 조정할 필요가 있다.
   - Read/Write 분리, 인덱스 최적화, 캐싱 레이어(Redis, Memcached) 활용 등을 고려해야 한다.

@@ -1,13 +1,13 @@
 # 캐시 도입을 통한 성능 개선 보고서
 
-## 1> 개요
+## 1. 개요
 - 본 보고서는 콘서트 조회 및 콘서트 스케쥴 조회에 Cache 를 도입한 내용을 분석하는 것으로 한다.
 - 주요 목적은 Cache 를 도입한 이유와 분석, 그리고 도입한 과정과 결과를 설명하는 것이다.
 - 대규모 트래픽이 예상되는 콘서트 예약 시스템에서 Cache 도입은 데이터베이스 부하 감소와 응답 시간 단축을 위한 핵심 전략이다.
 
 <br>
 
-## 2> 캐시 설정 분석
+## 2. 캐시 설정 분석
 
 ### 2.1 캐시 설정 코드 분석
 ```Java
@@ -50,6 +50,7 @@ public class RedisConfig implements CachingConfigurer {
                 .fromConnectionFactory(connectionFactory)
                 .cacheDefaults(redisCacheConfiguration)
                 .withInitialCacheConfigurations(redisCacheConfigurationMap)
+                .disableCachingNullValues()
                 .build();
     }
 }
@@ -72,7 +73,7 @@ public class RedisConfig implements CachingConfigurer {
 
 #### Null 값 캐싱 방지:
 
-- `unless = "#result == null || #result.content.isEmpty()"`를 통해 불필요한 null 값의 캐싱을 방지하여 캐시 공간을 효율적으로 사용하도록 했다.
+- `disableCachingNullValues()`를 통해 불필요한 null 값의 캐싱을 방지하여 캐시 공간을 효율적으로 사용하도록 했다.
 - 근거: null 값을 캐시하는 것은 불필요한 메모리 사용을 초래하고, 잠재적으로 의미 있는 데이터가 캐시되는 것을 방해할 수 있다. 또한, null 값을 반환하는 쿼리의 경우 캐시 없이 직접 데이터베이스에 접근하는 것이 더 효율적일 수 있다.
 
 #### 직렬화 설정:
@@ -88,7 +89,7 @@ public class RedisConfig implements CachingConfigurer {
 
 <br>
 
-## 3> 캐시 적용 분석
+## 3. 캐시 적용 분석
 
 ### 3.1 ConcertService의 캐시 적용
 
@@ -151,6 +152,7 @@ public class RedisConfig implements CachingConfigurer {
     - 콘서트의 변경(추가 및 삭제)가 긴급하게 적용되어야 할 필요가 없다고 생각해 5분의 지연은 허용 가능한 수준으로 판단했다.
     - 보다 긴 TTL은 데이터베이스 쿼리 횟수를 더욱 줄여 시스템 성능을 향상시킬 수 있다.
 - 조건: `#result` 혹은 `#result.content`가 null이 아닐 때만 캐시 적용
+- 동기화: sync = true로 설정하여 동시 요청 시 중복 연산 방지
 - 특히 JPA Specification을 활용하여 쿼리가 길고 복잡할 것으로 예상되는 `getConcertsByConditions()`인 만큼 캐싱이 유효할 것으로 판단했다.
 
 #### 3.1.2 getSchedulesByConcertId() 메소드
@@ -183,24 +185,24 @@ public class RedisConfig implements CachingConfigurer {
     - 그러나 그 이상으로 실시간성이 필요하다고 보았고 캐싱을 더 짧은 TTL로 갱신하기엔 리소스적으로 부적합하다고 판단했다.
     - 때문에 availableSeats는 불러올 때마다 새로 가져오도록 Seat Service로 분리하고 ConcertSchedule에도 동일하게 5분의 TTL을 부여했다.
 - 조건: #result가 모두 null이 아닐 때만 캐시 적용
+- 동기화: sync = true로 설정하여 동시 요청 시 중복 연산 방지
 
 ### 3.2 캐시 적용의 합리성
 
-#### 빈번한 조회 데이터 캐싱:
-- 사용 가능한 콘서트 목록과 콘서트 스케줄은 자주 조회되는 데이터다.
+#### 빈번한 조회 데이터 캐싱
+- 콘서트 목록과 콘서트 별 스케줄은 자주 조회되는 데이터다.
 - 이러한 데이터를 캐싱함으로써 반복적인 데이터베이스 쿼리를 줄여 전체적인 시스템 성능을 향상시킬 수 있다.
 
-#### 조건부 캐싱:
+#### 조건부 캐싱
 - result와 result.content의 데이터를 확인하여 불필요한 캐싱을 방지했다.
 - 이는 무의미한 데이터가 캐시를 차지하는 것을 방지하고, 캐시 공간을 효율적으로 사용할 수 있는 것을 기대했다.
 
-#### 동기화 설정:
+#### 동기화 설정
 - sync = true 설정으로 동시에 여러 요청이 들어올 경우, 한 번만 데이터베이스에 접근하여 캐시를 생성하도록 했다.
 - 이는 동시성 문제를 해결하고, 불필요한 데이터베이스 쿼리를 방지하여 시스템의 안정성과 효율성을 높이는 것을 기대했다.
-
 <br>
 
-## 4> 성능 개선 효과 분석
+## 4. 성능 개선 효과 분석
 ### 4.1 쿼리 최적화
 
 - 중복 쿼리 감소: 캐시를 통해 동일한 데이터에 대한 반복적인 데이터베이스 쿼리를 크게 줄일 수 있다.
@@ -231,7 +233,7 @@ LIMIT :size OFFSET :page * :size;
   - 예: 초당 1000건의 요청 중 80%가 캐시에서 처리된다면, 데이터베이스는 초당 200건의 요청만 처리하면 된다.
 <br>
 
-## 5> 콘서트 조회와 콘서트 스케쥴 기능에 Cache 도입 결론
+## 5. 콘서트 조회와 콘서트 스케쥴 기능에 Cache 도입 결론
 본 프로젝트에서 구현한 캐시 전략은 대량의 트래픽 발생 시 발생할 수 있는 지연 문제를 효과적으로 해결할 수 있는 방안이라고 생각한다.
 
 - 데이터베이스 부하 감소: 반복적인 쿼리를 캐시로 대체하여 데이터베이스 부하를 크게 줄인다.

@@ -24,22 +24,29 @@ sequenceDiagram
         ConcertService-->>APIGateway: 콘서트의 스케쥴 목록 전달
         APIGateway-->>User: 스케쥴 목록 응답
         User->>APIGateway: 대기열 진입 요청(User Id, ConcertSchedule Id)
-            APIGateway->>QueueService: 대기열 진입 요청 전달
-        alt Active 대기열 진입 실패(현재 Active 대기열의 수>200)=>5초마다 재요청(polling)
+        APIGateway->>QueueService: 대기열 진입 요청 전달
+        alt Active 대기열 진입 실패(현재 Active 대기열의 수>200)
             QueueService->>QueueService: Wait 대기열에 저장
             QueueService-->>APIGateway: 대기열 상태 전달
             APIGateway-->>User: Wait 상태 반환(예상 대기 시간, 순서 등)
+            loop 5초마다 재요청(polling)
+                APIGateway->>QueueService: 대기열 상태 재요청
+                QueueService-->>APIGateway: 대기열 상태 반환
+                APIGateway-->>User: 대기열 상태 갱신
+            end
         else Active 대기열 진입 성공(현재 Active 대기열의 수<=200)
             QueueService->>QueueService: Active 대기열에 저장
             QueueService-->>APIGateway: 대기열 상태 전달
             APIGateway-->>User: Active 상태 반환
-            User->APIGateway: 원하는 스케쥴의 좌석 목록 요청(ConcertSchedule Id)
+            User->>APIGateway: 원하는 스케쥴의 좌석 목록 요청(ConcertSchedule Id)
             APIGateway->>SeatService: 좌석 목록 요청 전달
             SeatService-->>APIGateway: 좌석 목록 전달
             APIGateway-->>User: 좌석 목록 응답
         end
     else 인증 실패 (존재하지 않는 회원)
-        APIGateway-->>User: 오류 메시지 반환 (Not found User)
+        APIGateway-->>User: 인증 실패 응답
+    end
+
 ```
 ### Description
 
