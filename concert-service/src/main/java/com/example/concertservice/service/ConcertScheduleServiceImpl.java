@@ -51,7 +51,7 @@ public class ConcertScheduleServiceImpl implements ConcertScheduleService {
     @Cacheable(
             value = "concertScheduleCache",
             key = "#concertId",
-            unless = "#result == null || #result.isEmpty()"
+            sync = true
     )
     public List<ConcertScheduleResponseDto> getSchedulesByConcertId(Long concertId) {
         List<ConcertSchedule> concertSchedules = concertScheduleRepository.findAllByConcertId(concertId);

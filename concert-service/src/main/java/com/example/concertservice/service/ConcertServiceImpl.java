@@ -43,7 +43,7 @@ public class ConcertServiceImpl implements ConcertService {
     @Cacheable(
             value = "concertCache",
             key = "{#title ?: 'ALL', #startDateTime?: 'ALL', #endDateTime?: 'ALL'}",
-            unless = "#result == null || #result.content.isEmpty()"
+            sync = true
     )
     public ConcertPageDto<ConcertResponseDto> getConcertsByConditions(
             String title,

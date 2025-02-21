@@ -57,6 +57,7 @@ public class RedisConfig implements CachingConfigurer {
                 .fromConnectionFactory(connectionFactory)
                 .cacheDefaults(redisCacheConfiguration)
                 .withInitialCacheConfigurations(redisCacheConfigurationMap)
+                .disableCachingNullValues()
                 .build();
     }
 }
