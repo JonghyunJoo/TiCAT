@@ -22,7 +22,7 @@ erDiagram
 
     ConcertSchedule {
         bigint id PK
-        bigint concertId FK (API 조회)
+        bigint concertId FK
         date date
         time startTime
         bigint totalSeats
@@ -32,8 +32,8 @@ erDiagram
     %% Seat Service
     Seat {
         bigint id PK
-        bigint concertScheduleId FK (API 조회)
-        bigint userId FK (API 조회)
+        bigint concertScheduleId FK
+        bigint userId FK
         bigint price
         enum seatGrade
         enum seatStatus
@@ -44,7 +44,7 @@ erDiagram
     %% Reservation Service
     ReservationGroup {
         bigint id PK
-        bigint userId FK (API 조회)
+        bigint userId FK
         enum status
         datetime createdAt
         datetime updatedAt
@@ -52,8 +52,8 @@ erDiagram
 
     Reservation {
         bigint id PK
-        bigint userId FK (API 조회)
-        bigint seatId FK (API 조회)
+        bigint userId FK
+        bigint seatId FK
         enum reservationStatus
         bigint price
         datetime createdAt
@@ -63,15 +63,15 @@ erDiagram
 
     %% Queue Service
     Queue {
-        bigint userId PK (API 조회)
-        bigint concertScheduleId FK (API 조회)
+        bigint userId PK
+        bigint concertScheduleId FK
         bigint requestTime
     }
 
     %% Payment Service
     Payment {
         bigint id PK
-        bigint userId FK (API 조회)
+        bigint userId FK
         bigint amount
         enum status
         datetime createdAt
@@ -80,13 +80,13 @@ erDiagram
     %% Wallet Service
     Wallet {
         bigint id PK
-        bigint userId FK (API 조회)
+        bigint userId FK
         bigint balance
     }
 
     TransactionHistory {
         bigint id PK
-        bigint userId FK (API 조회)
+        bigint userId FK
         bigint amount
         string type
         datetime createdAt
@@ -105,6 +105,7 @@ erDiagram
     Seat ||..|| Reservation : assigned_to
     ReservationGroup ||--|| Reservation : contains
     Wallet ||--|| TransactionHistory : has
+
 
 ```
 
