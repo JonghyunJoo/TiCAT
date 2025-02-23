@@ -285,7 +285,7 @@ K6를 통해 Load Test와 Peak Test를 진행하였으며 Prometheus와 Grafana�
 
 - 🔗[이벤트 시퀀스 다이어그램](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/02_EventSequence.md)
 
-- 🔗[ERD]([https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/03_ERD.md](https://flossy-name-c7c.notion.site/ERD-1a38f15d8fbc800aa5e1cb768e0e0d1b))
+- 🔗[ERD](https://flossy-name-c7c.notion.site/ERD-1a38f15d8fbc800aa5e1cb768e0e0d1b))
 
 - 🔗[API 명세 문서](https://flossy-name-c7c.notion.site/Spring-Cloud-ConcertReservation-1908f15d8fbc80ddb4ddcd3284892151)
 
