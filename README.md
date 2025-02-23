@@ -36,7 +36,7 @@
 
 **대규모 트래픽이 있는 상황에서도 안정적으로 요청을 처리할 수 있는 아키텍처를 고민해보고 프로젝트에 적용**
 
-<br>
+<br> 
 
 ---
 # 🎯 목표 & KPI(핵심성과지표)
@@ -285,7 +285,7 @@ K6를 통해 Load Test와 Peak Test를 진행하였으며 Prometheus와 Grafana�
 
 - 🔗[이벤트 시퀀스 다이어그램](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/02_EventSequence.md)
 
-- 🔗[ERD](https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/03_ERD.md)
+- 🔗[ERD]([https://github.com/JonghyunJoo/Spring_Cloud_ConcertReservation/blob/master/docs/03_ERD.md](https://flossy-name-c7c.notion.site/ERD-1a38f15d8fbc800aa5e1cb768e0e0d1b))
 
 - 🔗[API 명세 문서](https://flossy-name-c7c.notion.site/Spring-Cloud-ConcertReservation-1908f15d8fbc80ddb4ddcd3284892151)
 
