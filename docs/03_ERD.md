@@ -1,7 +1,6 @@
 
 ```mermaid
 erDiagram
-    %% User Service
     User {
         bigint id PK
         string email UNIQUE
@@ -9,7 +8,6 @@ erDiagram
         string encryptedPwd
     }
 
-    %% Concert Service
     Concert {
         bigint id PK
         string title
@@ -29,7 +27,6 @@ erDiagram
         text seatPricing
     }
 
-    %% Seat Service
     Seat {
         bigint id PK
         bigint concertScheduleId FK
@@ -41,7 +38,6 @@ erDiagram
         int columnNumber
     }
 
-    %% Reservation Service
     ReservationGroup {
         bigint id PK
         bigint userId FK
@@ -68,7 +64,6 @@ erDiagram
         bigint requestTime
     }
 
-    %% Payment Service
     Payment {
         bigint id PK
         bigint userId FK
@@ -77,7 +72,6 @@ erDiagram
         datetime createdAt
     }
 
-    %% Wallet Service
     Wallet {
         bigint id PK
         bigint userId FK
@@ -94,7 +88,6 @@ erDiagram
         bigint balanceAfterTransaction
     }
 
-    %% MSA 관계 (API 통신 기반)
     User ||..|| Wallet : owns
     User ||..|| ReservationGroup : makes
     User ||..|| Queue : joins
