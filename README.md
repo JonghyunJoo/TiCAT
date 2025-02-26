@@ -1,5 +1,5 @@
-# 🎫 대규모 트래픽에도 안정적인 콘서트 티켓팅 플랫폼
-
+# 🎫 TiCAT
+대규모 트래픽에도 안정적인 콘서트 티켓팅 플랫폼
 
 - [프로젝트 개요](https://github.com/JonghyunJoo/ConcertReservation?tab=readme-ov-file#-%EC%84%9C%EB%B9%84%EC%8A%A4-%EA%B0%9C%EC%9A%94)
 
