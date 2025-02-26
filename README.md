@@ -124,6 +124,8 @@ MSA란 MicroService Architecture의 약자로, 기존의 Monolithic Architecture
 - 롤링 업데이트를 통한 무중단 배포가 가능하다.
   ![Image](https://github.com/user-attachments/assets/b17e8860-e605-4909-8fb2-291d1095e2e3)
 
+#### 🔗[Helm Chart Repository](https://github.com/JonghyunJoo/TiCAT-Helm-Chart)
+
 ## ✔  동시성 문제와 극복
 ### 동시성 문제
 좌석 예약이나 잔액 충전과 같이 여러 사용자가 동시에 요청할 때, 순차적으로 처리해야 하는 요청에서 동일한 DB 항목에 대해 중복된 요청이 처리되는 문제가 발생하였다.
