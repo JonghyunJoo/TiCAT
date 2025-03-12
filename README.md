@@ -270,10 +270,16 @@ K6를 통해 Load Test와 Peak Test를 진행하였으며 Prometheus와 Grafana�
 - k6
 
 `monitoring`
+
 - prometheus
 - grafana
+- Elastic Search
+- LogStash
+- Kibana
+- File Beats
 
 `etc`
+
 - github
 - notion
 
