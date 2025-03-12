@@ -1,0 +1,17 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /api-logs/*.log
+    fields:
+      log_source: "spring-boot-app"
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.overwrite_keys: true
+
+output.kafka:
+  enabled: true
+  hosts: ["kafka:9092"]
+  topic: "spring-boot-logs"
+  codec.json:
+    pretty: true
