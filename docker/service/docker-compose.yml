@@ -154,6 +154,20 @@ services:
       - kafka_kafka_network
       - my-network
 
+    filebeat:
+    image: docker.elastic.co/beats/filebeat
+    container_name: filebeat
+    user: root
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /api-logs:/api-logs:ro
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    depends_on:
+      - kafka
+    networks:
+      - my-network
+      - kafka_kafka_network
+
 networks:
   my-network:
     external: true
